@@ -1,11 +1,13 @@
 Package: pathfinder
 Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Title: Track File Dependencies in Research Projects
+Version: 0.0.0.9000
+Date: 2018-01-13
+Author: person("Brad", "Cannell", email = "brad.cannell@gmail.com",
+  role = c("aut", "cre"))
+Maintainer: Brad Cannell <brad.cannell@gmail.com>
+Description: The goal of pathfinder is to help track file dependencies in 
+    research projects created in RStudio. Perhaps other things later.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
