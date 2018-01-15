@@ -34,6 +34,8 @@ Need to come up with a better method for notes/documentation/file dependencies f
 * Maybe send out to Google Docs
 * Scan r scripts for text (“read” and “write”)
 * Add comments to the YAML header that will later be added to the report that this function generates
+    - This doesn't work for R Notebooks. Preview doesn't knit.
+    - If you use discussion element in YAML header, assume that others won't necessarily see.
 * Markdown check boxes embedded in a tasks section of the report
 
 ## Packages that may be involved:
