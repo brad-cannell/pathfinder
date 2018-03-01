@@ -26,6 +26,11 @@ Need to come up with a better method for notes/documentation/file dependencies f
 
 * Github projects has some really nice features; however, it isn’t available offline. Is this a big deal? How often am I really doing work without an internet connection? Another issue is that many of the people I work with are not accustomed to, or comfortable with, using Github.
 
+* [Drake](https://github.com/ropensci/drake).    
+    - Drake seems like it is more complex than needed for problems I'm trying to solve.    
+    - I still can't get the graphs to work in Drake.   
+    - Drake doesn't seem conducive to working interactively with notebooks.
+
 ## Specifics:
 
 * Automate the notes pages I currently make for research projects
