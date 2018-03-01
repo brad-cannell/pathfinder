@@ -29,7 +29,8 @@ Need to come up with a better method for notes/documentation/file dependencies f
 * [Drake](https://github.com/ropensci/drake).    
     - Drake seems like it is more complex than needed for problems I'm trying to solve.    
     - I still can't get the graphs to work in Drake.   
-    - Drake doesn't seem conducive to working interactively with notebooks.
+    - Drake doesn't seem conducive to working interactively with notebooks.    
+    - I don't want to have to tell my solution ahead of time what I'm going to do. I want to just do things, then have my solution keep track of what I did and what other parts of my process may be affected.
 
 ## Specifics:
 
@@ -50,7 +51,7 @@ Need to come up with a better method for notes/documentation/file dependencies f
 - Rmarkdown
 - Knitter
 - DiagrammR (see below)
-- Plotty (see below)
+- Plotly (see below)
 - Shiny (see below)
 - Github API (see below)
 
@@ -58,9 +59,9 @@ Need to come up with a better method for notes/documentation/file dependencies f
 
 Maybe it works using (partly) a network diagram where the root node is the project root, the other nodes are files (color coded by type, I.e., data manipulation or analysis or presentation) and the edges are data (files, but maybe other data too). 
 
-Hovering over the nodes and edges shows ploty-style metadata.
+Hovering over the nodes and edges shows plotly-style metadata.
 
-Shiny app would be viewable offline, but still hide the code from the user and allow for arbitrary notes. But, it isn’t viewable on a GitHub repo. However, as long as it’s just metadata, I can probably link the the shiny app hosted on shiny apps.io from Github
+Shiny app would be viewable offline, but still hide the code from the user and allow for arbitrary notes. But, it isn’t viewable on a GitHub repo. However, as long as it’s just metadata, I can probably link the shiny app hosted on shiny apps.io from Github
 
 Use Github API to reflect project issues
 
