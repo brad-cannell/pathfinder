@@ -1,0 +1,139 @@
+---
+title: "Create Commander's Intent File"
+date: "Created: 2018-01-03 <br> Updated: `r Sys.Date()`"
+output: 
+  html_notebook
+---
+
+# Warning:
+
+Left off at line 72. Hold off on this for now. Just get the basic functionality working. I think that a better way to store internal information will eventually be R6 objects. But, I will need a refresher on using them.
+
+# Overview
+
+The big idea is that find all instances of read and write in all folders within a project.
+
+Assumptions:    
+1. An RStudio project is being used.     
+2. Data inputs and outputs use functions that begin with "read" and "write"     
+
+Steps:     
+1. Scan all files and folders in the directory    
+2. Scan R and Rmd files for the words “read” and “write”     
+3. To save time, it might be nice to add the ability to ignore certain files and file types.
+4. Eventually, need to make it stateful
+5. Also, need to figure out how to grab metadata
+
+
+## In this file
+
+We create a settings file that will contain settings used in other Pathfinder functions
+
+Assumptions:   
+
+1. Pathfinder will typically be deployed in R projects.    
+
+    * When deployed in R projects, Pathfinder will automatically detect the .Rproj file and the path to that .Rproj file will be se as the root directory.
+    
+    * If the user desires a different behavior (e.g., target a different project than the one the user is currently working in or mapping dependencies among a collection of files that do not exist in an R project) then the path can be specified manually.    
+    
+        - The specified path will serve as the root directory. Pathfinder will attempt to gather dependency information about every file in the root directory and all child directories.   
+        
+        - If the user is not in an R project and a path is not specified, then Pathfinder will set the current directory to be the project root. Pathfinder will attempt to gather dependency information about every file in the root directory and all child directories.
+        
+        
+        You have to be in an open R project or provide a file path, or both.
+
+# Load packages
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment = NA)
+Sys.setenv(TZ = "US/Central")
+```
+
+```{r message=FALSE}
+library(tidyverse)
+```
+
+```{r}
+commanders_intent <- function(project_root = NULL) {
+  
+  # Just some introductory text
+  # Introduction <- "The commander's intent succinctly describes what constitutes success for the operation. You will use this file to succinctly provide direction to your pathfinder."
+  
+  # Set the path to the project root
+  # Usually, this will be the root of the current project.
+  # User must be working in an open R project or provide a root directory path.
+  if (is.null(project_root)) {
+    
+    # Get current root directory
+    root_dir <- here::here()
+    
+    # List all files in current root directory
+    root_dir_file_list <- list.files(path = root_dir, recursive = TRUE)
+    
+    # Remove child directories
+    # Left off here...
+    # Currently, if I run this function when I'm not in a project. It will return the RStudio
+    # working directory and look in all of its child directories. Because there are .Rproj files
+    # in child directories, it satisfies the condition below. I only want to know if there is an
+    # .Rproj file in the current directory - not any of the child directories
+    # Use regex to drop any files from the list that contain a "/"
+    stringr::str_detect(root_dir_file_list)
+    
+    # Check to make sure it's an R project directory
+    if (!(any(stringr::str_detect(root_dir_file_list, "\\.Rproj")))) {
+      stop("To use pathfinder, be working in an open R project or you must provide a root directory path to the 'project_root' argument.")
+    }
+  } else {
+    root_dir <- project_root
+  }
+  
+  print(root_dir_file_list)
+  # stringr::str_detect(root_dir_file_list, "\\.Rproj" )
+    
+  # File extensions that will be used to classify a file as "code"
+    
+  # File extensions that will be used to classify a file as "data"
+    
+  # File extensions that will be used to classify a file as "output"
+    
+  # Create the file in the root directory
+  # file_name <- paste(root_dir, "commanders_intent.txt", sep = "/")
+  # file_name <- file(file_name)
+  
+  # Fill in the content
+  # writeLines(
+  #   Introduction,
+  #   con = file_name
+  # )
+  
+  # Close the connection
+  # close(file_name)
+}
+
+commanders_intent()
+```
+
+```{r}
+# Test file path
+commanders_intent()
+```
+
+
+"The commander's intent succinctly describes what constitutes success for the operation. You will use this file to succinctly provide direction to your pathfinder.
+
+PATH = {NULL}
+
+CODE_FILES = {.R .Rmd .py}
+
+DATA_FILES = {.csv .xlsx}
+"
+
+&nbsp;
+
+-------------------------------------------------------------------------------
+
+```{r echo=FALSE}
+sessionInfo()
+```

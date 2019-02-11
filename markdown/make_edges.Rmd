@@ -1,0 +1,321 @@
+---
+title: "Make Edges"
+date: "Created: 2018-07-21 <br> Updated: `r Sys.Date()`"
+output: 
+  html_notebook
+---
+
+# Simple scenario 1: Start with simulation
+
+## Nodes
+
+```{r rows.print=13}
+# Create a simple NDF
+nodes <- DiagrammeR::create_node_df(
+  n = 6,
+  
+  type = c("code", "data", "output", "code", "code", "output"),
+  
+  label = c("simulation.Rmd", "data.rds", "simulation.nb.html", "analysis1.R",
+            "analysis2.R", "analysis2.nb.html"),
+  
+  # Level controls hierarchy. This may be the tricky part to program automatically
+  level = c(1, 2, 2, 3, 3, 4)
+)
+
+# Color by type
+nodes <- nodes %>% 
+  mutate(
+    color = case_when(
+      type == "data"   ~ "orange",
+      type == "code"   ~ "lightblue",
+      type == "output" ~ "lightgreen"
+    )
+  )
+
+# Shape by type - can also use icons
+# http://datastorm-open.github.io/visNetwork/legend.html
+nodes <- nodes %>% 
+  mutate(
+    shape = case_when(
+      type == "data"   ~ "box",
+      type == "code"   ~ "box",
+      type == "output" ~ "box"
+    )
+  )
+
+nodes
+```
+
+## Edges
+
+```{r}
+# Create a simple EDF
+edges <- DiagrammeR::create_edge_df(
+    from = c(1, 1, 2, 2, 5),
+    to   = c(2, 3, 4, 5, 6)
+)
+
+edges
+```
+
+## Graph
+
+```{r}
+visNetwork::visNetwork(nodes, edges) %>% 
+  visNetwork::visEdges(arrows = "to") %>% 
+  visNetwork::visOptions(selectedBy = list(variable = "type", multiple = TRUE)) %>% 
+  visNetwork::visHierarchicalLayout(direction = "UD", levelSeparation = 100)
+```
+
+
+
+
+
+
+I think if I can build the following data frame, then I can use it to recreate the graph above. Build it manually first.
+
+NULLs are messing things up down the road. Just use an empty list instead.
+
+```{r}
+data_code_output_files_test_01 <- tibble(
+  id = 1:6,
+  
+  file_name = c("simulation.Rmd", "data.rds", "simulation.nb.html", "analysis1.R", "analysis2.R", "analysis2.nb.html"),
+  
+  type = c("code", "data", "output", "code", "code", "output"),
+  
+  reads_in = c(list(NA_character_), list(NA_character_), list(NA_character_), list("data.rds"), list("data.rds"), list(NA_character_)),
+  
+  creates = c(list(c("data.rds", "simulation.nb.html")), list(NA_character_), list(NA_character_), list(NA_character_), list("analysis2.nb.html"), list(NA_character_)),
+  
+  is_read_into = c(list(NA_character_), list(c("analysis1.R", "analysis2.R")), list(NA_character_), list(NA_character_), list(NA_character_), list(NA_character_)),
+  
+  is_created_in = c(list(NA_character_), list("simulation.Rmd"), list("simulation.Rmd"), list(NA_character_), list(NA_character_), list("analysis2.R"))
+)
+
+data_code_output_files_test_01
+```
+
+## What is the relationships?
+
+* reads_in: The id for the "file_name" file goes in "to" and the id for the "reads_in" file(s) go in "from"   
+* creates: The id for the "file_name" file goes in "from" and the id for the "creates" file(s) go in "to"   
+* is_read_into: The id for the "file_name" file goes in "from" and the id for the "is_read_into" file(s) go in "to"   
+* is_created_in: The id for the "file_name" file goes in "to" and the id for the "is_created_in" file(s) go in "from"   
+
+
+```{r}
+id_list <- data_code_output_files_test_01 %>% 
+  select(id, file_name)
+```
+
+
+```{r}
+# * reads_in: The id for the "file_name" file goes in "to" and the id for the "reads_in" file(s) go in "from"
+edges_reads_in <- data_code_output_files_test_01 %>% 
+  select(file_name, reads_in) %>% 
+  filter(!is.na(reads_in)) %>% 
+  unnest(reads_in) %>% 
+  rename("to_name" = "file_name", "from_name" = "reads_in") %>% 
+  left_join(id_list, by = c("from_name" = "file_name")) %>% 
+  rename("from" = "id") %>% 
+  left_join(id_list, by = c("to_name" = "file_name")) %>% 
+  rename("to" = "id")
+
+edges_reads_in
+```
+
+```{r}
+# * creates: The id for the "file_name" file goes in "from" and the id for the "creates" file(s) go in "to"
+edges_creates <- data_code_output_files_test_01 %>% 
+  select(file_name, creates) %>% 
+  filter(!is.na(creates)) %>% 
+  unnest(creates) %>% 
+  rename("from_name" = "file_name", "to_name" = "creates") %>% 
+  left_join(id_list, by = c("from_name" = "file_name")) %>% 
+  rename("from" = "id") %>% 
+  left_join(id_list, by = c("to_name" = "file_name")) %>% 
+  rename("to" = "id")
+
+edges_creates
+```
+
+```{r}
+# * is_read_into: The id for the "file_name" file goes in "from" and the id for the "is_read_into" file(s) go in "to"   
+edges_is_read_into <- data_code_output_files_test_01 %>% 
+  select(file_name, is_read_into) %>% 
+  filter(!is.na(is_read_into)) %>% 
+  unnest(is_read_into) %>% 
+  rename("from_name" = "file_name", "to_name" = "is_read_into") %>% 
+  left_join(id_list, by = c("from_name" = "file_name")) %>% 
+  rename("from" = "id") %>% 
+  left_join(id_list, by = c("to_name" = "file_name")) %>% 
+  rename("to" = "id")
+
+edges_is_read_into
+```
+
+```{r}
+# * is_created_in: The id for the "file_name" file goes in "to" and the id for the "is_created_in" file(s) go in "from" 
+edges_is_created_in <- data_code_output_files_test_01 %>% 
+  select(file_name, is_created_in) %>% 
+  filter(!is.na(is_created_in)) %>% 
+  unnest(is_created_in) %>% 
+  rename("to_name" = "file_name", "from_name" = "is_created_in") %>% 
+  left_join(id_list, by = c("from_name" = "file_name")) %>% 
+  rename("from" = "id") %>% 
+  left_join(id_list, by = c("to_name" = "file_name")) %>% 
+  rename("to" = "id")
+
+edges_is_created_in
+```
+
+## bind them all together
+
+```{r}
+bind_rows(
+  edges_reads_in,
+  edges_creates,
+  edges_is_read_into,
+  edges_is_created_in
+) %>% 
+  distinct() %>% 
+  arrange(from, to) %>% 
+  mutate(
+    id = row_number(),
+    rel = NA
+  ) %>% 
+  select(id, from, to, rel)
+```
+
+```{r}
+edges
+```
+
+
+## Can now make edges
+
+Next, turn it into a funcion...
+
+```{r}
+get_edges <- function(data, ...) {
+  
+  # Create file_name - id key
+  id_list <- data %>% 
+    select(id, file_name)
+  
+  # reads_in: 
+  # The id for the "file_name" file goes in "to" and the id for the "reads_in" 
+  # file(s) go in "from"
+  edges_reads_in <- data %>% 
+    select(file_name, reads_in) %>% 
+    filter(!is.na(reads_in)) %>% 
+    unnest(reads_in) %>% 
+    rename("to_name" = "file_name", "from_name" = "reads_in") %>% 
+    left_join(id_list, by = c("from_name" = "file_name")) %>% 
+    rename("from" = "id") %>% 
+    left_join(id_list, by = c("to_name" = "file_name")) %>% 
+    rename("to" = "id")
+  
+  # creates: 
+  # The id for the "file_name" file goes in "from" and the id for the "creates" 
+  # file(s) go in "to"
+  edges_creates <- data %>% 
+    select(file_name, creates) %>% 
+    filter(!is.na(creates)) %>% 
+    unnest(creates) %>% 
+    rename("from_name" = "file_name", "to_name" = "creates") %>% 
+    left_join(id_list, by = c("from_name" = "file_name")) %>% 
+    rename("from" = "id") %>% 
+    left_join(id_list, by = c("to_name" = "file_name")) %>% 
+    rename("to" = "id")
+  
+  # is_read_into: 
+  # The id for the "file_name" file goes in "from" and the id for the 
+  # "is_read_into" file(s) go in "to"   
+  edges_is_read_into <- data %>% 
+    select(file_name, is_read_into) %>% 
+    filter(!is.na(is_read_into)) %>% 
+    unnest(is_read_into) %>% 
+    rename("from_name" = "file_name", "to_name" = "is_read_into") %>% 
+    left_join(id_list, by = c("from_name" = "file_name")) %>% 
+    rename("from" = "id") %>% 
+    left_join(id_list, by = c("to_name" = "file_name")) %>% 
+    rename("to" = "id")
+  
+  # is_created_in: 
+  # The id for the "file_name" file goes in "to" and the id for the 
+  # "is_created_in" file(s) go in "from" 
+  edges_is_created_in <- data %>% 
+    select(file_name, is_created_in) %>% 
+    filter(!is.na(is_created_in)) %>% 
+    unnest(is_created_in) %>% 
+    rename("to_name" = "file_name", "from_name" = "is_created_in") %>% 
+    left_join(id_list, by = c("from_name" = "file_name")) %>% 
+    rename("from" = "id") %>% 
+    left_join(id_list, by = c("to_name" = "file_name")) %>% 
+    rename("to" = "id")
+  
+  # Bind rows and format output
+  out <- bind_rows(
+    edges_reads_in,
+    edges_creates,
+    edges_is_read_into,
+    edges_is_created_in
+  ) %>% 
+    distinct() %>% 
+    arrange(from, to) %>% 
+    mutate(
+      id = row_number(),
+      rel = NA
+    ) %>% 
+    select(id, from, to, rel)
+  
+  # Return tibble of edges
+  out
+}
+
+# get_edges(data_code_output_files_test_01)
+```
+
+```{r}
+edges
+```
+
+I think I can get rid of the "rel" column. It doesn't appear to do anything.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,958 @@
+---
+title: "Filling in levels column"
+date: "Created: 2018-07-21 <br> Updated: `r Sys.Date()`"
+output: 
+  html_notebook
+---
+
+```{r}
+library(tidyverse)
+```
+
+
+# Simple scenario 1: Start with simulation
+
+## Nodes
+
+```{r rows.print=13}
+# Create a simple NDF
+nodes_manual <- DiagrammeR::create_node_df(
+  n = 6,
+  
+  type = c("code", "data", "output", "code", "code", "output"),
+  
+  label = c("simulation.Rmd", "data.rds", "simulation.nb.html", "analysis1.R",
+            "analysis2.R", "analysis2.nb.html"),
+  
+  # Level controls hierarchy. This may be the tricky part to program automatically
+  level = c(1, 2, 2, 3, 3, 4)
+)
+
+# Color by type
+nodes_manual <- nodes_manual %>% 
+  mutate(
+    color = case_when(
+      type == "data"   ~ "orange",
+      type == "code"   ~ "lightblue",
+      type == "output" ~ "lightgreen"
+    )
+  )
+
+# Shape by type - can also use icons
+# http://datastorm-open.github.io/visNetwork/legend.html
+nodes_manual <- nodes_manual %>% 
+  mutate(
+    shape = case_when(
+      type == "data"   ~ "box",
+      type == "code"   ~ "box",
+      type == "output" ~ "box"
+    )
+  )
+
+nodes_manual
+```
+
+## Edges
+
+```{r}
+# Create a simple EDF
+edges_manual <- DiagrammeR::create_edge_df(
+    from = c(1, 1, 2, 2, 5),
+    to   = c(2, 3, 4, 5, 6)
+)
+
+edges_manual
+```
+
+## Graph
+
+```{r}
+visNetwork::visNetwork(nodes_manual, edges_manual) %>% 
+  visNetwork::visEdges(arrows = "to") %>% 
+  visNetwork::visOptions(selectedBy = list(variable = "type", multiple = TRUE)) %>% 
+  visNetwork::visHierarchicalLayout(direction = "UD", levelSeparation = 100)
+```
+
+
+
+
+
+
+
+
+
+
+# Starting from edges provides an easier path to figure out levels
+
+```{r}
+data_code_output_files_manual <- tibble(
+  id = 1:6,
+  
+  file_name = c("simulation.Rmd", "data.rds", "simulation.nb.html", "analysis1.R", "analysis2.R", "analysis2.nb.html"),
+  
+  type = c("code", "data", "output", "code", "code", "output"),
+  
+  reads_in = c(list(NA_character_), list(NA_character_), list(NA_character_), list("data.rds"), list("data.rds"), list(NA_character_)),
+  
+  creates = c(list(c("data.rds", "simulation.nb.html")), list(NA_character_), list(NA_character_), list(NA_character_), list("analysis2.nb.html"), list(NA_character_)),
+  
+  is_read_into = c(list(NA_character_), list(c("analysis1.R", "analysis2.R")), list(NA_character_), list(NA_character_), list(NA_character_), list(NA_character_)),
+  
+  is_created_in = c(list(NA_character_), list("simulation.Rmd"), list("simulation.Rmd"), list(NA_character_), list(NA_character_), list("analysis2.R"))
+)
+
+data_code_output_files_manual
+```
+
+```{r}
+my_edges <- get_edges(data_code_output_files_manual)
+my_edges
+```
+
+
+```{r}
+my_nodes <- data_code_output_files_manual %>% 
+  rename("label" = "file_name") %>% 
+  select(id, type, label) %>% 
+  mutate(
+    color = case_when(
+      type == "data"   ~ "orange",
+      type == "code"   ~ "lightblue",
+      type == "output" ~ "lightgreen"
+    ),
+    shape = case_when(
+      type == "data"   ~ "box",
+      type == "code"   ~ "box",
+      type == "output" ~ "box"
+    )
+  )
+
+my_nodes
+```
+
+
+```{r}
+visNetwork::visNetwork(my_nodes, my_edges) %>% 
+  visNetwork::visEdges(arrows = "to") %>% 
+  visNetwork::visOptions(selectedBy = list(variable = "type", multiple = TRUE)) %>% 
+  visNetwork::visHierarchicalLayout(direction = "UD", levelSeparation = 100)
+```
+
+This is what it looks like without supplying levels. Not terrible, but I think adding in the levels are useful.
+
+Is there a way to determine levels from edges and nodes?
+
+* If id is not in "to", then its level is 1    
+
+```{r}
+test <- my_nodes %>% 
+  left_join(my_edges, by = c("id" = "to")) %>% 
+  select(-id.y, -rel) %>% 
+  left_join(my_edges, by = c("id" = "from")) %>% 
+  select(-id.y, -rel) %>% 
+  mutate(
+    level = if_else(!(id %in% to), 1L, NA_integer_)
+  )
+
+test
+```
+
+* Whatever the level is for the "from" variable, the "to" variable is that + 1     
+
+Start by doing it for one case, then put in loop
+
+Get the id in "to" when level equals 1, and set level to 1 + 1 for those id's
+
+```{r}
+ids <- test %>% filter(level == 1) %>% pull(to)
+ids
+
+test %>% mutate(level = if_else(id %in% ids, 1L + 1L, level))
+```
+
+Now put in a loop from 1 to the largest number of id. That would allow for the most extreme case where every node is on its own level
+
+```{r}
+for(i in unique(test$id)) {
+  
+  # Get the id in "to" when level equals i
+  ids <- test %>% 
+    filter(level == i) %>% 
+    pull(to)
+  
+  # Set level to i + 1 for those id's
+  test <- test %>% 
+    mutate(level = if_else(id %in% ids, i + 1L, level))
+}
+
+test
+```
+
+Merge back with my_nodes
+
+```{r}
+my_nodes <- my_nodes %>% 
+  left_join(select(test, id, level), by = "id") %>% 
+  distinct()
+
+my_nodes
+```
+
+```{r}
+visNetwork::visNetwork(my_nodes, my_edges) %>% 
+  visNetwork::visEdges(arrows = "to") %>% 
+  visNetwork::visOptions(selectedBy = list(variable = "type", multiple = TRUE)) %>% 
+  visNetwork::visHierarchicalLayout(direction = "UD", levelSeparation = 100)
+```
+
+It works!!! 
+
+* Now, try the other secenario
+
+* Then, turn into functions
+
+* Then, use in look_for_read_write.Rmd
+
+
+
+
+
+
+
+
+
+
+# Simple scenario 2: Start with multiple datasets
+
+```{r rows.print=13}
+# Create a simple NDF
+nodes_manual <- DiagrammeR::create_node_df(
+  n = 8,
+  
+  type = c("data", "data", "code", "data", "output", "code", "code", "output"),
+  
+  label = c("data_01.xlsx", "data_02.csv", "merge_data.Rmd", "merged.feather",
+            "merge_data.nb.html", "analysis_01.R", "analysis_02.Rmd", 
+            "analysis_02.nb.html"),
+  
+  # Level controls hierarchy
+  level = c(1, 1, 2, 3, 3, 4, 4, 5)
+)
+
+# Color by type
+nodes_manual <- nodes_manual %>% 
+  mutate(
+    color = case_when(
+      type == "data"   ~ "orange",
+      type == "code"   ~ "lightblue",
+      type == "output" ~ "lightgreen"
+    )
+  )
+
+# Shape by type - can also use icons
+# http://datastorm-open.github.io/visNetwork/legend.html
+nodes_manual <- nodes_manual %>% 
+  mutate(
+    shape = case_when(
+      type == "data"   ~ "box",
+      type == "code"   ~ "box",
+      type == "output" ~ "box"
+    )
+  )
+
+nodes_manual
+```
+
+## Edges
+
+```{r}
+# Create a simple EDF
+edges_manual <- DiagrammeR::create_edge_df(
+    from = c(1, 2, 3, 3, 4, 4, 7),
+    to   = c(3, 3, 4, 5, 6, 7, 8)
+)
+
+edges_manual
+```
+
+## Graph
+
+```{r}
+visNetwork::visNetwork(nodes_manual, edges_manual) %>% 
+  visNetwork::visEdges(arrows = "to") %>% 
+  visNetwork::visOptions(selectedBy = list(variable = "type", multiple = TRUE)) %>% 
+  visNetwork::visHierarchicalLayout(direction = "UD", levelSeparation = 100)
+```
+
+This is what I want to recreate programmatically
+
+
+# Starting from edges provides an easier path to figure out levels
+
+```{r}
+data_code_output_files_manual <- tibble(
+  id = 1:8,
+  
+  file_name = c("data_01.xlsx", "data_02.csv", "merge_data.Rmd", "merged.feather",
+                "merge_data.nb.html", "analysis_01.R", "analysis_02.Rmd", 
+                "analysis_02.nb.html"),
+  
+  type = c("data", "data", "code", "data", "output", "code", "code", "output"),
+  
+  reads_in = c(list(NA_character_), list(NA_character_), 
+               list(c("data_01.xlsx", "data_02.csv")), list(NA_character_), 
+               list(NA_character_), list("merged.feather"), list("merged.feather"),
+               list(NA_character_)),
+  
+  creates = c(list(NA_character_), list(NA_character_), 
+              list(c("merged.feather", "merge_data.nb.html")), 
+              list(NA_character_), list(NA_character_), list(NA_character_), 
+              list("analysis_02.nb.html"), list(NA_character_)),
+  
+  is_read_into = c(list("merge_data.Rmd"), list("merge_data.Rmd"), list(NA_character_), 
+              list(c("analysis_01.R", "analysis_02.Rmd")), list(NA_character_), 
+              list(NA_character_), list(NA_character_), list(NA_character_)),
+  
+  is_created_in = c(list(NA_character_), list(NA_character_), list(NA_character_), 
+              list("merge_data.Rmd"), list("merge_data.Rmd"), list(NA_character_), 
+              list(NA_character_), list("analysis_02.Rmd"))
+)
+
+data_code_output_files_manual
+```
+
+```{r}
+my_edges <- get_edges(data_code_output_files_manual)
+my_edges
+```
+
+
+```{r}
+my_nodes <- data_code_output_files_manual %>% 
+  rename("label" = "file_name") %>% 
+  select(id, type, label) %>% 
+  mutate(
+    color = case_when(
+      type == "data"   ~ "orange",
+      type == "code"   ~ "lightblue",
+      type == "output" ~ "lightgreen"
+    ),
+    shape = case_when(
+      type == "data"   ~ "box",
+      type == "code"   ~ "box",
+      type == "output" ~ "box"
+    )
+  )
+
+my_nodes
+```
+
+
+```{r}
+visNetwork::visNetwork(my_nodes, my_edges) %>% 
+  visNetwork::visEdges(arrows = "to") %>% 
+  visNetwork::visOptions(selectedBy = list(variable = "type", multiple = TRUE)) %>% 
+  visNetwork::visHierarchicalLayout(direction = "UD", levelSeparation = 100)
+```
+
+This is what it looks like without supplying levels. Not terrible, but I think adding in the levels are useful.
+
+Is there a way to determine levels from edges and nodes?
+
+* If id is not in "to", then its level is 1    
+
+```{r}
+test <- my_nodes %>% 
+  left_join(my_edges, by = c("id" = "to")) %>% 
+  select(-id.y, -rel) %>% 
+  left_join(my_edges, by = c("id" = "from")) %>% 
+  select(-id.y, -rel) %>% 
+  mutate(
+    level = if_else(!(id %in% to), 1L, NA_integer_)
+  )
+
+test
+```
+
+* Whatever the level is for the "from" variable, the "to" variable is that + 1     
+
+Start by doing it for one case, then put in loop
+
+Get the id in "to" when level equals 1, and set level to 1 + 1 for those id's
+
+```{r}
+ids <- test %>% filter(level == 1) %>% pull(to)
+ids
+
+test %>% mutate(level = if_else(id %in% ids, 1L + 1L, level))
+```
+
+Now put in a loop from 1 to the largest number of id. That would allow for the most extreme case where every node is on its own level
+
+```{r}
+for(i in unique(test$id)) {
+  
+  # Get the id in "to" when level equals i
+  ids <- test %>% 
+    filter(level == i) %>% 
+    pull(to)
+  
+  # Set level to i + 1 for those id's
+  test <- test %>% 
+    mutate(level = if_else(id %in% ids, i + 1L, level))
+}
+
+test
+```
+
+Merge back with my_nodes
+
+```{r}
+my_nodes <- my_nodes %>% 
+  left_join(select(test, id, level), by = "id") %>% 
+  distinct()
+
+my_nodes
+```
+
+```{r}
+visNetwork::visNetwork(my_nodes, my_edges) %>% 
+  visNetwork::visEdges(arrows = "to") %>% 
+  visNetwork::visOptions(selectedBy = list(variable = "type", multiple = TRUE)) %>% 
+  visNetwork::visHierarchicalLayout(direction = "UD", levelSeparation = 100)
+```
+
+It works!!! 
+
+* Now, try the other secenario
+
+* Then, turn into functions
+
+* Then, use in look_for_read_write.Rmd
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Old Stuff. Keeping around just in case...
+
+I think if I can build the following data frame, then I can use it to recreate the graph above. Build it manually first.
+
+NULLs are messing things up down the road. Just use an empty list instead.
+
+```{r}
+data_code_output_files_test_01 <- tibble(
+  id = 1:5,
+  file_name = c("simulation.Rmd", "data.rds", "simulation.nb.html", "analysis1.R", "analysis2.R"),
+  type = c("code", "data", "output", "code", "code"),
+  reads_in = c(list(NA_character_), list(NA_character_), list(NA_character_), list("data.rds"), list("data.rds")),
+  creates = c(list(c("data.rds", "simulation.nb.html")), list(NA_character_), list(NA_character_), list(NA_character_), list(NA_character_)),
+  is_read_into = c(list(NA_character_), list(c("analysis1.R", "analysis2.R")), list(NA_character_), list(NA_character_), list(NA_character_)),
+  is_created_in = c(list(NA_character_), list("simulation.Rmd"), list("simulation.Rmd"), list(NA_character_), list(NA_character_))
+)
+
+data_code_output_files_test_01
+```
+
+Now I have this table that I'm pretty sure I can create from my file name directory and the separtate read and write tables. 
+
+The next task is to convert this table into the nodes and edges table that VisNetwork needs.
+
+As it currently stands, this is basically the nodes table. We just need to add the "level" variable. The finished product should look like this:
+
+```{r}
+data_code_output_files_test_01 %>% 
+  mutate(level = c(1, 2, 2, 3, 3)) 
+```
+
+Now do it algorithmically:
+
+```{r}
+# Although this is the more verbose code, I'm keeping it for now because it's easier to understand than the code below.
+
+data_code_output_files_test_01a <- data_code_output_files_test_01 %>% 
+  mutate(
+    # If it's code and top level:
+        # It will never read_in anything (NA)
+        # It can create something, but doesn't have to create anything
+        # It will never be read into anything (NA) - true of all code
+        # It will never be created in anything (NA) - true of all code
+    level = purrr::map2_int(
+      .x = type,
+      .y = reads_in,
+      .f = ~ {
+        if_else(.x == "code" & is.na(.y), 1L, NA_integer_)
+      }
+    )
+  ) %>% 
+  mutate(
+    # In which row does the file name in "is_created_in" match the file name in "file_name"?
+    created_row = map_int(
+      .x = is_created_in,
+      .f = function(x) {
+        if (!is.na(x)) {
+          created_row <- which(.$file_name == x)
+        } else {
+          created_row <- NA_integer_
+        }
+      }
+    )
+  ) %>% 
+  mutate(
+    # level where row number = created row
+    level_in_created_row = purrr::map_int(
+      .x = created_row,
+      .f = function(x) {
+        .$level[x]
+      }
+    )
+  ) %>% 
+  mutate(
+    # level of the current row is level_in_created_row + 1
+    level = if_else(is.na(level) & !is.na(level_in_created_row), level_in_created_row + 1L, level)
+  ) %>% 
+  mutate(
+    # In which row does the file name in "reads_in" match the file name in "file_name"?
+    reads_in_row = map_int(
+      .x = reads_in,
+      .f = function(x) {
+        if (!is.na(x)) {
+          reads_in_row <- which(.$file_name == x)
+        } else {
+          reads_in_row <- NA_integer_
+        }
+      }
+    )
+  ) %>% 
+  mutate(
+    # level where row number = reads_in_row
+    level_reads_in_row = purrr::map_int(
+      .x = reads_in_row,
+      .f = function(x) {
+        .$level[x]
+      }
+    )
+  ) %>% 
+  mutate(
+    # level of the current row is level_reads_in_row + 1
+    level = if_else(is.na(level) & !is.na(level_reads_in_row), level_reads_in_row + 1L, level)
+  )
+
+data_code_output_files_test_01a %>% 
+  select(id, file_name, type, level)
+```
+
+
+## This is clunky, but it gives the result we wanted!!!
+
+Now let's try to combine some of these steps
+
+```{r}
+data_code_output_files_test_01a <- data_code_output_files_test_01 %>% 
+  
+  # I think finding level 1 needs to have a special place
+  mutate(
+    level = case_when(
+      # If it's code at top level:
+        # It will never read_in anything (NA)
+        # It can create something, but doesn't have to create anything
+        # It will never be read into anything (NA) - true of all code
+        # It will never be created in anything (NA) - true of all code
+      type == "code" & is.na(reads_in) ~ 1L,
+      # If it's data at top level:
+        # It will never read_in anything (NA)
+        # It will never create something (NA)
+        # It can be read into something, but doesn't have to (data that is never used)
+        # It will never be created in anything (NA)
+      type == "data" & is.na(is_read_into) ~ 1L,
+      # If it's output at top level:
+        # Could be some random picture or PowerPoint in the folder
+        # It will never read_in anything (NA)
+        # It will never create something (NA)
+        # It will never be read into something (NA)
+        # It will never be created in anything (NA)
+      type == "output" & is.na(is_created_in) ~ 1L
+    )
+  ) %>% 
+  
+  # Now find all subsequent levels
+  mutate(
+    # level of the current row is level_in_created_row + 1
+    level = if_else(
+      # Condition
+      is.na(level) & !is.na(
+        purrr::map_int(
+          .x = is_created_in,
+          .f = function(x) {
+            if (!is.na(x)) {
+              level_in_created_row <- .$level[which(.$file_name == x)]
+            } else {
+              level_in_created_row <- NA_integer_
+            }
+          }
+        )
+      ), 
+      # IF TRUE
+      purrr::map_int(
+        .x = is_created_in,
+        .f = function(x) {
+          if (!is.na(x)) {
+            level_in_created_row <- .$level[which(.$file_name == x)]
+          } else {
+            level_in_created_row <- NA_integer_
+          }
+        }
+      ) + 1L, 
+      # IF FALSE
+      level
+    )
+  ) %>% 
+  
+  mutate(
+    # level of the current row is level_in_created_row + 1
+    level = if_else(
+      # Condition
+      is.na(level) & !is.na(
+        purrr::map_int(
+          .x = reads_in,
+          .f = function(x) {
+            if (!is.na(x)) {
+              level_reads_in_row <- .$level[which(.$file_name == x)]
+            } else {
+              level_reads_in_row <- NA_integer_
+            }
+          }
+        )
+      ), 
+      # IF TRUE
+      purrr::map_int(
+        .x = reads_in,
+        .f = function(x) {
+          if (!is.na(x)) {
+            level_reads_in_row <- .$level[which(.$file_name == x)]
+          } else {
+            level_reads_in_row <- NA_integer_
+          }
+        }
+      ) + 1L, 
+      # IF FALSE
+      level
+    )
+  )
+
+data_code_output_files_test_01a %>% 
+  select(id, file_name, type, level)
+```
+
+
+Now they are all combined, but this isn't readable at all.
+
+Also, what happens if we add another layer?
+
+Let's say analysis 2 creates an html file
+
+```{r}
+data_code_output_files_test_01 <- tibble(
+  id = 1:6,
+  
+  file_name = c("simulation.Rmd", "data.rds", "simulation.nb.html", "analysis1.R", "analysis2.R", "analysis2.nb.html"),
+  
+  type = c("code", "data", "output", "code", "code", "output"),
+  
+  reads_in = c(list(NA_character_), list(NA_character_), list(NA_character_), list("data.rds"), list("data.rds"), list(NA_character_)),
+  
+  creates = c(list(c("data.rds", "simulation.nb.html")), list(NA_character_), list(NA_character_), list(NA_character_), list("analysis2.nb.html"), list(NA_character_)),
+  
+  is_read_into = c(list(NA_character_), list(c("analysis1.R", "analysis2.R")), list(NA_character_), list(NA_character_), list(NA_character_), list(NA_character_)),
+  
+  is_created_in = c(list(NA_character_), list("simulation.Rmd"), list("simulation.Rmd"), list(NA_character_), list(NA_character_), list("analysis2.R"))
+)
+
+data_code_output_files_test_01
+```
+
+```{r}
+data_code_output_files_test_01a <- data_code_output_files_test_01 %>% 
+  
+  # I think finding level 1 needs to have a special place
+  mutate(
+    level = case_when(
+      # If it's code at top level:
+        # It will never read_in anything (NA)
+        # It can create something, but doesn't have to create anything
+        # It will never be read into anything (NA) - true of all code
+        # It will never be created in anything (NA) - true of all code
+      type == "code" & is.na(reads_in) ~ 1L,
+      # If it's data at top level:
+        # It will never read_in anything (NA)
+        # It will never create something (NA)
+        # It can be read into something, but doesn't have to (data that is never used)
+        # It will never be created in anything (NA)
+      type == "data" & is.na(is_read_into) ~ 1L,
+      # If it's output at top level:
+        # Could be some random picture or PowerPoint in the folder
+        # It will never read_in anything (NA)
+        # It will never create something (NA)
+        # It will never be read into something (NA)
+        # It will never be created in anything (NA)
+      type == "output" & is.na(is_created_in) ~ 1L
+    )
+  ) %>% 
+  
+  # Now find all subsequent levels
+  mutate(
+    # level of the current row is level_in_created_row + 1
+    level = if_else(
+      # Condition
+      is.na(level) & !is.na(
+        purrr::map_int(
+          .x = is_created_in,
+          .f = function(x) {
+            if (!is.na(x)) {
+              level_in_created_row <- .$level[which(.$file_name == x)]
+            } else {
+              level_in_created_row <- NA_integer_
+            }
+          }
+        )
+      ), 
+      # IF TRUE
+      purrr::map_int(
+        .x = is_created_in,
+        .f = function(x) {
+          if (!is.na(x)) {
+            level_in_created_row <- .$level[which(.$file_name == x)]
+          } else {
+            level_in_created_row <- NA_integer_
+          }
+        }
+      ) + 1L, 
+      # IF FALSE
+      level
+    )
+  ) %>% 
+  
+  mutate(
+    # level of the current row is level_in_created_row + 1
+    level = if_else(
+      # Condition
+      is.na(level) & !is.na(
+        purrr::map_int(
+          .x = reads_in,
+          .f = function(x) {
+            if (!is.na(x)) {
+              level_reads_in_row <- .$level[which(.$file_name == x)]
+            } else {
+              level_reads_in_row <- NA_integer_
+            }
+          }
+        )
+      ), 
+      # IF TRUE
+      purrr::map_int(
+        .x = reads_in,
+        .f = function(x) {
+          if (!is.na(x)) {
+            level_reads_in_row <- .$level[which(.$file_name == x)]
+          } else {
+            level_reads_in_row <- NA_integer_
+          }
+        }
+      ) + 1L, 
+      # IF FALSE
+      level
+    )
+  )
+
+data_code_output_files_test_01a %>% 
+  select(id, file_name, type, level)
+```
+
+No, it doesn't scale...
+
+There's also a lot of repeated code. How can we break this into functions???
+
+I think level 1 has a special role. Create a function to figure out identify all the level 1 files.
+
+```{r}
+identify_level_1_files <- function(data, ...) {
+  data %>% 
+    dplyr::mutate(
+      level = dplyr::case_when(
+      # If it's code at top level:
+        # It will never read_in anything (NA)
+        # It can create something, but doesn't have to create anything
+        # It will never be read into anything (NA) - true of all code
+        # It will never be created in anything (NA) - true of all code
+      type == "code" & is.na(reads_in) ~ 1L,
+      # If it's data at top level:
+        # It will never read_in anything (NA)
+        # It will never create something (NA)
+        # It can be read into something, but doesn't have to (data that is never used)
+        # It will never be created in anything (NA)
+      type == "data" & is.na(is_read_into) ~ 1L,
+      # If it's output at top level:
+        # Could be some random picture or PowerPoint in the folder
+        # It will never read_in anything (NA)
+        # It will never create something (NA)
+        # It will never be read into something (NA)
+        # It will never be created in anything (NA)
+      type == "output" & is.na(is_created_in) ~ 1L
+    )
+  )
+}
+```
+
+```{r}
+data_code_output_files_test_01a <- identify_level_1_files(data_code_output_files_test_01)
+data_code_output_files_test_01a
+```
+
+Now that level 1 is identified, I want to loop until there are no more level == NA.
+
+Start by determining what to do for any individual row.
+
+```{r}
+# Starting at level 1, get file type
+get_level_1_file_type <- function(data, ...) {
+  data %>% 
+    dplyr::filter(level == 1) %>% 
+    dplyr::pull(type)
+}
+
+(level_1_type <- get_level_1_file_type(data_code_output_files_test_01a))
+```
+
+```{r}
+# If the type is code, then get the file names from creates
+# If the type is data, then get the file names from is_read_into
+get_next_level_files <- function(data, ...) {
+  level_1_type <- get_level_1_file_type(data)
+  
+  # If the type is code, then get the file names from creates
+  if ("code" %in% level_1_type) 
+  }
+}
+
+get_next_level_files(data_code_output_files_test_01a)
+```
+
+```{r}
+assign_levels_files <- function(data, ...) {
+  # Identify all the level 1 files
+  data <- identify_level_1_files(data)
+  
+  # Starting at level 1, get file types
+  level_1_types <- get_level_1_file_type(data)
+  
+  # If the type is code, then get the file names from creates
+  if ("code" %in% level_1_type) {
+    creates_files <- data %>% 
+      filter(type == "code" & level == 1) %>% 
+      pull(creates) %>% 
+      unlist()
+  }
+  
+  # For each file in "creates_files" set level == 2
+  # Obviously, this doesn' scale
+  data <- data %>% 
+    mutate(
+      level = if_else(file_name %in% creates_files, 2L, level)
+    )
+  
+  # Return the data frame
+  data
+}
+
+assign_levels_files(data_code_output_files_test_01)
+```
+
+Can't code this manually. Need to figure out a way to tell R to figure out how many levels there are.
+
+I think I will eventually need to alternate between odd and even nubers to scale.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

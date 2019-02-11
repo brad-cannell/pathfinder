@@ -1,0 +1,1 @@
+The commander's intent succinctly describes what constitutes success for the operation. You will use this file to succinctly provide direction to your pathfinder.

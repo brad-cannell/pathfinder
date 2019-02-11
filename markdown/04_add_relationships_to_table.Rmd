@@ -1,0 +1,815 @@
+---
+title: "Look for Keywords (read/write) in the Code File Text"
+date: "Created: 2018-08-23 <br> Updated: `r Sys.Date()`"
+output: 
+  html_notebook:
+    css: custom-css.css
+---
+
+# Table of contents
+* [Overview](#overview)   
+* [Look for keywords related to reading-in data in code files](#read)   
+* [Look for keywords related to writing-out data in code files](#write)     
+* [Look for keywords related to saving output in code files](#save)     
+* [Add file relationships to master file table](#relationship)   
+* [User-created functions](#functions)   
+* [Save progress](#save)   
+
+
+# Overview {#overview}
+
+* We already have the master file table created in the previous Rmd file. It contains all file names under the project root, as well as the full text of all code files.
+
+* In this file we want to infer the following relationships between the files in the master file list:   
+    * reads in (already done)   
+    * creates (done for data, but not for output)   
+    * is read into   
+    * is created in   
+    
+* We do that below using:    
+    * Keyword searches in the full text of the code files (i.e., read, write, save)   
+    * Matching code file names with output file names   
+    
+**Important:** For now I'm going to assume that any html/docx/pdf file in the directory was created by knitting an R markdown file. That will allow me to match these output types on file name alone. However, there is a growing number of tools that allow you to create Word documents (and other kinds of documents) from within R in other ways. In the future Pathfinder should try to support them.
+
+
+# Load packages and data
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment = NA)
+Sys.setenv(TZ = "US/Central")
+```
+
+```{r message=FALSE}
+library(tidyverse)
+```
+
+## Root directory path
+
+```{r}
+root_dir <- readr::read_rds("data/root_dir.rds")
+```
+
+## List of files under the root directory
+
+```{r}
+root_dir_file_list <- readr::read_rds("data/root_dir_file_list")
+```
+
+## Master file table
+
+```{r}
+root_dir_file_table <- readr::read_rds("data/root_dir_file_table.rds")
+```
+
+
+
+
+
+
+
+
+
+
+# Look for keywords related to reading-in data in code files {#read}
+
+This is all adapted from look for read write Rmd, line 396. Also, make sure to add descriptive text about what's going on.
+
+```{r}
+root_dir_file_table <- root_dir_file_table %>% 
+  mutate(
+    read_keyword_line_numbers = 
+      purrr::map(full_text, stringr::str_detect, "read\\S\\w{3,}") %>%
+      purrr::map(which),
+    
+    close_parenthesis_line_number = 
+      purrr::map(full_text, stringr::str_detect, "\\)") %>% 
+      purrr::map(which),
+    
+    close_parenthesis_matching_line_number = purrr::map2(
+      .x = read_keyword_line_numbers,
+      .y = close_parenthesis_line_number,
+      .f = ~ {
+        purrr::map_dbl(
+          .x,
+          .f = function(x) {
+            .y[.y >= x][1]
+          }
+        )
+      }
+    ),
+    
+    keep_read_line_numbers = purrr::map2(
+      .x = read_keyword_line_numbers,
+      .y = close_parenthesis_matching_line_number,
+      .f = ~ {
+        purrr::map2(.x, .y, seq) %>% 
+          unlist() %>% 
+          unique()
+      }
+    ),
+    read_lines = purrr::map2(full_text, keep_read_line_numbers, `[`)
+  )
+```
+
+
+## Identify rows that contain a file name
+
+The regular expression below scans through instances when a read* function was used to read-in data in each code file. Starting from the beginning of the line it looks for one or more characters, followed by a single '.', followed by any three or more letters (e.g., 'csv' or 'feather').
+
+```{r}
+root_dir_file_table <- root_dir_file_table %>% 
+  mutate(
+    read_file_names_index = purrr::map(read_lines, stringr::str_detect, "(\\w+\\.\\w{3,})"),
+    read_lines            = purrr::map2(read_lines, read_file_names_index, `[`)
+  )
+```
+
+
+## Strip out everything except the name of the file being read-in and its extension
+
+The regular expression below scans through instances when a read* function was used to read-in data in each code file. 
+
+Starting from the beginning of the line, the first group (i.e., the regex in the first set of parentheses) looks for one or more characters (e.g., "foo"), followed by a single '.', followed by any three or more letters (e.g., 'csv' or 'feather'). 
+
+The second group (i.e., the regex in the second set of parentheses) is a lookahead. It tells R that the first group is only valid if it is followed by a quote and closing parentheses.
+
+Finally, if the same dataset is read-in to a file more than one time (as "student_scores_01.csv" was in data_clean_student_data_01.R), we only want to keep the dataset name once. That's why we iterate unique through the list using purrr::map.
+
+```{r}
+root_dir_file_table <- root_dir_file_table %>% 
+  mutate(
+    reads_in = purrr::map(
+      read_lines, 
+      stringr::str_extract, 
+      # Create regular expression that looks for single and double quotes
+      paste( 
+        '(\\w+\\.\\w+)(?=\\"\\))', # Double quotes
+        "(\\w+\\.\\w+)(?=\\'\\))", # Single quotes
+        sep = "|"
+      )
+    ),
+    reads_in = purrr::map(reads_in, unique)
+  )
+
+root_dir_file_table
+```
+
+```{r}
+# Test single quotes
+# root_dir_file_table %>% 
+#   select(read_lines) %>%  
+#   mutate(
+#     read_lines = purrr::map(
+#       read_lines,
+#       stringr::str_replace_all,
+#       pattern = '"', 
+#       replacement = "'"
+#     )
+#   ) %>% 
+#   pull(read_lines) %>% 
+#   purrr::map(
+#     ., 
+#     stringr::str_extract, 
+#     paste( 
+#       '(\\w+\\.\\w+)(?=\\"\\))', # Double quotes
+#       "(\\w+\\.\\w+)(?=\\'\\))", # Single quotes
+#       sep = "|"
+#     )
+#   )
+# Works
+```
+
+At this point, "reads_in" contains the names of all data sets that were read-in using a code file in the current R project.
+
+## Clean up
+
+```{r}
+root_dir_file_table <- root_dir_file_table %>% 
+  select(
+    -read_keyword_line_numbers,
+    -close_parenthesis_line_number,
+    -close_parenthesis_matching_line_number,
+    -keep_read_line_numbers,
+    -read_lines,
+    -read_file_names_index
+  )
+```
+
+
+[top](#top)
+
+
+
+
+
+
+
+
+
+
+# Look for keywords related to writing-out data in code files {#write}
+
+Just copy and paste from above
+
+```{r}
+root_dir_file_table <- root_dir_file_table %>% 
+  mutate(
+    write_keyword_line_numbers = 
+      purrr::map(full_text, stringr::str_detect, "write\\S\\w{3,}") %>%
+      purrr::map(which),
+    
+    close_parenthesis_line_number = 
+      purrr::map(full_text, stringr::str_detect, "\\)") %>% 
+      purrr::map(which),
+    
+    close_parenthesis_matching_line_number = purrr::map2(
+      .x = write_keyword_line_numbers,
+      .y = close_parenthesis_line_number,
+      .f = ~ {
+        purrr::map_dbl(
+          .x,
+          .f = function(x) {
+            .y[.y >= x][1]
+          }
+        )
+      }
+    ),
+    
+    keep_write_line_numbers = purrr::map2(
+      .x = write_keyword_line_numbers,
+      .y = close_parenthesis_matching_line_number,
+      .f = ~ {
+        purrr::map2(.x, .y, seq) %>% 
+          unlist() %>% 
+          unique()
+      }
+    ),
+    
+    write_lines = purrr::map2(full_text, keep_write_line_numbers, `[`)
+  )
+```
+
+
+## Identify rows that contain a file name
+
+The regular expression below scans through instances when a write* function was used to write-out data in each code file. Starting from the beginning of the line it looks for one or more characters, followed by a single '.', followed by any three or more letters (e.g., 'csv' or 'feather').
+
+```{r}
+root_dir_file_table <- root_dir_file_table %>% 
+  mutate(
+    write_file_names_index = purrr::map(write_lines, stringr::str_detect, "(\\w+\\.\\w{3,})"),
+    write_lines            = purrr::map2(write_lines, write_file_names_index, `[`)
+  )
+```
+
+
+## Strip out everything except the name of the file being read-in and its extension
+
+The regular expression below scans through instances when a read* function was used to read-in data in each code file. 
+
+Starting from the beginning of the line, the first group (i.e., the regex in the first set of parentheses) looks for one or more characters (e.g., "foo"), followed by a single '.', followed by any three or more letters (e.g., 'csv' or 'feather'). 
+
+The second group (i.e., the regex in the second set of parentheses) is a lookahead. It tells R that the first group is only valid if it is followed by a quote and closing parentheses.
+
+Finally, if the same dataset is read-in to a file more than one time (as "student_scores_01.csv" was in data_clean_student_data_01.R), we only want to keep the dataset name once. That's why we iterate unique through the list using purrr::map.
+
+```{r}
+root_dir_file_table <- root_dir_file_table %>% 
+  mutate(
+    files_written_out = purrr::map(
+      write_lines, 
+      stringr::str_extract, 
+      # Create regular expression that looks for single and double quotes
+      paste( 
+        '(\\w+\\.\\w+)(?=\\"\\))', # Double quotes
+        "(\\w+\\.\\w+)(?=\\'\\))", # Single quotes
+        sep = "|"
+      )
+  ),
+    files_written_out = purrr::map(files_written_out, unique)
+  )
+```
+
+**Problem: ** data_clean_data_01.R writes out scores_clean_01.feather; however, it isn't showing up in the master file table after the step above. Why?
+
+I think it has something to do with the fact that there is only one value in the write_lines variable ("data/scores_01_clean.feather"), but the value for write_file_names_index is "c(FALSE, FALSE, TRUE, FALSE)
+"
+
+```{r}
+root_dir_file_table
+```
+
+
+At this point, "files_written_out" contains the names of all data sets that were written out of a code file in the current R project.
+
+
+## Clean up
+
+```{r}
+root_dir_file_table <- root_dir_file_table %>% 
+  select(
+    -write_keyword_line_numbers,
+    -close_parenthesis_line_number,
+    -close_parenthesis_matching_line_number,
+    -keep_write_line_numbers,
+    -write_lines,
+    -write_file_names_index
+  )
+```
+
+[top](#top)
+
+
+
+
+
+
+
+
+
+
+# Look for keywords related to saving output in code files {#save}
+
+## Find files created with the keyword "save"
+
+Then put the files created with "save" into the "created" column of the master file list.
+
+```{r}
+root_dir_file_table <- root_dir_file_table %>% 
+  mutate(
+    save_keyword_line_numbers = 
+      purrr::map(full_text, stringr::str_detect, "save\\(") %>%
+      purrr::map(which),
+    
+    close_parenthesis_line_number =
+      purrr::map(full_text, stringr::str_detect, "\\)") %>%
+      purrr::map(which),
+
+    close_parenthesis_matching_line_number = purrr::map2(
+      .x = save_keyword_line_numbers,
+      .y = close_parenthesis_line_number,
+      .f = ~ {
+        purrr::map_dbl(
+          .x,
+          .f = function(x) {
+            .y[.y >= x][1]
+          }
+        )
+      }
+    ),
+
+    keep_save_line_numbers = purrr::map2(
+      .x = save_keyword_line_numbers,
+      .y = close_parenthesis_matching_line_number,
+      .f = ~ {
+        purrr::map2(.x, .y, seq) %>%
+          unlist() %>%
+          unique()
+      }
+    ),
+
+    save_lines = purrr::map2(full_text, keep_save_line_numbers, `[`)
+  )
+```
+
+```{r}
+root_dir_file_table <- root_dir_file_table %>% 
+  mutate(
+    save_file_names_index = purrr::map(save_lines, stringr::str_detect, "(\\w+\\.\\w{3,})"),
+    save_lines            = purrr::map2(save_lines, save_file_names_index, `[`)
+  )
+```
+
+```{r}
+root_dir_file_table <- root_dir_file_table %>% 
+  mutate(
+    files_saved = purrr::map(
+      save_lines, 
+      stringr::str_extract, 
+      # Create regular expression that looks for single and double quotes
+      paste( 
+        '(\\w+\\.\\w+)(?=\\"\\))', # Double quotes
+        "(\\w+\\.\\w+)(?=\\'\\))", # Single quotes
+        sep = "|"
+      )
+  ),
+    files_saved = purrr::map(files_saved, unique)
+  )
+```
+
+## Clean up
+
+```{r}
+root_dir_file_table <- root_dir_file_table %>% 
+  select(
+    -save_keyword_line_numbers,
+    -close_parenthesis_line_number,
+    -close_parenthesis_matching_line_number,
+    -keep_save_line_numbers,
+    -save_lines,
+    -save_file_names_index
+  )
+```
+
+At this point:   
+* The "reads in" column is done. For each code file, this column contains all data files read in.   
+* The "files written out" column is done. For each code file, this column contains all data files written out.    
+* The "files saved" column is done. For each code file, this column contains all files saved out.    
+
+Still need to identify which code files created other types of output files (e.g., html, docx)
+
+**Important:** For now I'm going to assume that any html/docx/pdf file in the directory was created by knitting an R markdown file. That will allow me to match these output types on file name alone. 
+
+However, there is a growing number of tools that allow you to create Word documents (and other kinds of documents) from within R in other ways. In the future Pathfinder should try to support them.
+
+[top](#top)
+
+
+
+
+
+
+
+
+
+
+# Add file relationships to master file table by name matching {#matching}
+
+What I eventually need is a table like the one on line 76 of make_edges.Rmd. Specifically, I need to have the following columns in the master file table:
+
+* reads in (already done)   
+* creates (done for data, but not for output)   
+* is read into   
+* is created in   
+
+Need to figure out an automated way to do that.
+
+## Matching code files with output files based on file name (assumes knitting).
+
+If type is code, then creates = file_short_name WHERE name without extension matches name without extension and type is output.
+
+For example, "analysis_descriptive.nb.html" should be in the creates column for "analysis_descriptive.Rmd"
+
+```{r}
+root_dir_file_table <- root_dir_file_table %>% 
+  dplyr::mutate(
+    output_files = root_dir_file_table %>% 
+      dplyr::filter(type == "output") %>% 
+      dplyr::pull(file_short_name) %>% 
+      list(),
+    files_knitted = purrr::pmap(
+      .l = list(file_name_no_extension, type, output_files),
+      .f = function(file_name_no_extension, type, output_files) {
+        if (type == "code") {
+          index <- stringr::str_detect(output_files, file_name_no_extension)
+          output_files[index]
+        } else {
+          vector(mode = "character")
+        }
+      }
+    )
+  )
+```
+
+
+## Clean up
+
+```{r}
+root_dir_file_table <- root_dir_file_table %>% 
+  select(-output_files)
+```
+
+At this point:   
+* The "reads in" column is done. For each code file, this column contains all data files read in.   
+* The "files written out" column is done. For each code file, this column contains all data files written out.    
+* The "files saved" column is done. For each code file, this column contains all files saved out.    
+* The "files_knitted" column is done. For each code file, this column contains all files knitted.   
+
+**Important:** For now I'm going to assume that any html/docx/pdf file in the directory was created by knitting an R markdown file. That will allow me to match these output types on file name alone. 
+
+However, there is a growing number of tools that allow you to create Word documents (and other kinds of documents) from within R in other ways. In the future Pathfinder should try to support them.
+
+[top](#top)
+
+
+
+
+
+
+
+
+
+
+# Create four columns for make edges {#four-columns}
+
+This may not be necessary -- or even desirable -- in the long run. Just doing it now because if I can get the master file table into the same format I have it in in make_edges.Rmd, then I should be able to complete the rest of the process.
+
+What I eventually need is a table like the one on line 76 of make_edges.Rmd. Specifically, I need to have the following columns in the master file table:
+
+* reads in (already done)   
+* creates (done for data, but not for output)   
+* is read into   
+* is created in   
+
+```{r}
+root_dir_file_table
+```
+
+
+```{r}
+root_dir_file_table <- root_dir_file_table %>% 
+  mutate(
+    creates = purrr::pmap(
+      .l = list(files_written_out, files_saved, files_knitted),
+      .f = c
+    )
+  )
+```
+
+* Creates is in there now.
+
+
+Left off here...   
+Next step 
+
+Why does data_clean_data_01.R have an NA value for files_written_out?
+
+
+
+
+
+
+
+
+
+
+
+
+
+# This is all taken directly from look for read write.Rmd line 776. Might be useful for creating the relationship table.
+
+## Add the information from read_files
+
+```{r}
+data_code_output_files_w_reads_in <- data_code_output_files %>% 
+  left_join(unnest(read_files), by = c("label" = "name")) %>% 
+  nest(reads, .key = "reads_in")
+
+data_code_output_files_w_reads_in
+```
+
+```{r}
+# data_code_output_files <- data_code_output_files %>% 
+#   mutate(
+#     reads_in = data_code_output_files %>% 
+#       left_join(read_files, by = c("label" = "name")) %>% 
+#       pull(reads)
+#   )
+```
+
+```{r}
+# data_code_output_files <- replace(data_code_output_files, 
+#                                   data_code_output_files == "NULL", 
+#                                   NA_character_)
+# data_code_output_files
+```
+
+
+## Add is_read_into
+
+read_files$reads is read_into read_files$name
+
+or 
+
+data_code_output_files$reads_in is read_into data_code_output_files$label
+
+```{r}
+data_code_output_files_w_is_read_into <- data_code_output_files %>% 
+  left_join(unnest(read_files), by = c("label" = "reads")) %>% 
+  nest(name, .key = "is_read_into")
+
+data_code_output_files_w_is_read_into
+```
+
+## Add creates or is created in
+
+* For markdown files, I can match on file name   
+* Could also do a keyword search for "save" as in ggsave   
+* What else is commonly created in code files?   
+* Actually, for now don't think about every possible thing that could be created. Just focus on matching file names and programatically created plots.
+
+* Create and save a simple plot and ggplot. Make sure they are counted as output.  
+* Add a caveat to the documentation that pathfinder only tracks files that are created programmatically. Not images, for example   
+
+[top](#top)
+
+
+
+
+
+
+
+
+
+
+# User-created functions {#functions}
+
+These are the functions we use below. I'm making them easy to find here at the top of the notebook because you may want to move them over to the Pathfinder package when you are done with testing.
+
+## Get file names by keyword
+
+Keep file names associated with keywords of interest (e.g., read, write, save)
+
+```{r}
+get_file_names_by_keyword <- function(.data, .keyword) {
+  
+  # ===========================================================================
+  # Create different regex patterns to search for depending on the keyword
+  # ===========================================================================
+  if (.keyword %in% c("read", "write")) {
+    
+    # Scan for "keyword" followed by any non-whitespace character followed
+    # by 3 or more letters (e.g., read.csv...)
+    keyword_search_regex_pattern <- paste0(.keyword, "\\S\\w{3,}")
+  
+  } else if (.keyword == "save") {
+    
+    # Scan for the word "save" followed by an open parenthesis
+    keyword_search_regex_pattern <- "save\\("
+  }
+  
+  # ===========================================================================
+  # Keep text that includes keywords of interest (e.g., read, write, save)
+  # ===========================================================================
+  # Start with the full text from each code file.
+  # Search the text for the keyword
+  # Extract the text from the lines that include code used with 
+  # keyword - from start of keyword to next closing parenthesis
+  # (e.g., read_csv(...) or write.csv(...))
+  out <- .data %>%
+    dplyr::mutate(
+      
+      # Scan for the regex pattern created above - depends on .keyword
+      # Just keep the line numbers
+      keyword_line_numbers = 
+        purrr::map(
+          full_text, 
+          stringr::str_detect, 
+          keyword_search_regex_pattern 
+        ) %>%
+        purrr::map(which),
+      
+      # Find all lines that include a closing parenthesis 
+      close_parenthesis_line_number = 
+        purrr::map(full_text, stringr::str_detect, "\\)") %>% 
+        purrr::map(which),
+      
+      # Above we got the line number for each keyword function
+      # We also got the line numbers for all closing parentheses
+      # We assume that the file names we are trying to get are contained within
+      # the keyword_whatever function and the very next closing parenthesis.
+      # Here, for each line that includes "keyword", we return the very next 
+      # line that contains a closing parenthesis (often same line).
+      close_parenthesis_matching_line_number = purrr::map2(
+        .x = keyword_line_numbers,
+        .y = close_parenthesis_line_number,
+        .f = ~ {
+          purrr::map_dbl(
+            .x,
+            .f = function(x) {
+              .y[.y >= x][1]
+            }
+          )
+        }
+      ),
+      
+      # Lines from full text to keep - includes from the beginning of each 
+      # keyword function to the next closing parenthesis.
+      keep_line_numbers = purrr::map2(
+        .x = keyword_line_numbers,
+        .y = close_parenthesis_matching_line_number,
+        .f = ~ {
+          purrr::map2(.x, .y, seq) %>% 
+            unlist() %>% 
+            unique()
+        }
+      ),
+      
+      # Keep only the text chunks that include the keyword function(s)
+      text_including_keyword := purrr::map2(full_text, keep_line_numbers, `[`)
+    )
+    
+    # =========================================================================
+    # Identify rows that contain a file name
+    # The regular expression below scans through instances when a keyword 
+    # function was used to read-in/write-out data in each code file. Starting 
+    # from the beginning of the line it looks for one or more characters, 
+    # followed by a single '.', followed by any three or more letters (e.g., 
+    # 'csv' or 'feather').
+    # =========================================================================
+    out <- out %>% 
+      dplyr::mutate(
+        file_names_index = purrr::map(
+          text_including_keyword, stringr::str_detect, "(\\w+\\.\\w{3,})"
+        ),
+        keyword_lines = purrr::map2(
+          text_including_keyword, file_names_index, `[`
+        )
+      )
+    
+    # =========================================================================
+    # Strip out everything except the name of the file being read-in and its 
+    # extension.
+    
+    # The regular expression below scans through instances when a keyword 
+    # function was used in each code file. 
+    
+    # Starting from the beginning of the line, the first group looks for one 
+    # or more characters (e.g., "foo"), followed by a single '.', followed by 
+    # any three or more letters (e.g., 'csv' or 'feather'). 
+    
+    # The second group is a lookahead. It tells R that the first group is only 
+    # valid if it is followed by a quote and closing parentheses.
+    # =========================================================================
+    out <- out %>% 
+      dplyr::mutate(
+        file_names = purrr::map(
+          keyword_lines, 
+          stringr::str_extract, 
+          # Create regular expression that looks for single and double quotes
+          paste( 
+            '(\\w+\\.\\w+)(?=\\"\\))', # Double quotes
+            "(\\w+\\.\\w+)(?=\\'\\))", # Single quotes
+            sep = "|"
+          )
+        ),
+        file_names = purrr::map(file_names, unique)
+      )
+    
+    # Keep file name column only
+    # --------------------------
+    out <- out %>% dplyr::pull(file_names)
+  
+  # Return data frame column that contains keyword text. To bind to master
+  # file table
+  out
+}
+```
+
+```{r}
+# get_file_names_by_keyword(root_dir_file_table, "read")
+```
+
+```{r}
+# get_file_names_by_keyword(root_dir_file_table, "write")
+```
+
+```{r}
+# get_file_names_by_keyword(root_dir_file_table, "save")
+```
+
+### In use
+
+Will likely do this inside of some larger function in the package.
+
+```{r}
+root_dir_file_table <- root_dir_file_table %>% 
+  mutate(
+    reads_in          = get_file_names_by_keyword(., "read"),
+    files_written_out = get_file_names_by_keyword(., "write"),
+    files_saved       = get_file_names_by_keyword(., "save"),
+    created           = purrr::map2(
+      .x = files_written_out,
+      .y = files_saved,
+      .f = c
+    )
+  )
+```
+
+
+
+
+
+
+
+
+
+
+# Save progress {#save}
+
+For use in future
+
+```{r}
+# readr::write_rds(root_dir_file_table, "data/root_dir_file_table.rds")
+```
+
+[top](#top)
+
+&nbsp;
+
+-------------------------------------------------------------------------------
+
+```{r echo=FALSE}
+sessionInfo()
+```

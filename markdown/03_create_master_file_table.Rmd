@@ -1,0 +1,353 @@
+---
+title: "Create Master File Table"
+date: "Created: 2018-08-07 <br> Updated: `r Sys.Date()`"
+output: 
+  html_notebook:
+    css: custom-css.css
+---
+  
+# Table of contents
+  
+* [Overview](#overview)   
+* [Create master file table](#create-table)   
+* [Read-in all text from code files](#read-text)   
+* [User-created functions](#functions)   
+* [Save master file table for use later](#save)   
+            
+            
+# Overview {#overview}
+            
+I needed to come up with a better method for tracking notes/documentation/file dependencies in analysis projects. The goal of Pathfinder is to help track file dependencies in research projects created in RStudio. Perhaps other things later. 
+            
+Assumptions:    
+1. Pathfinder will typically be deployed in R projects.   
+            
+* When deployed in R projects, Pathfinder will automatically detect the .Rproj file and the path to that .Rproj file will be se as the root directory.   
+            
+* If the user desires a different behavior (e.g., target a different project than the one the user is currently working in or mapping dependencies among a collection of files that do not exist in an R project) then the path can be specified manually.    
+            
+    - The specified path will serve as the root directory. Pathfinder will attempt to gather dependency information about every file in the root directory and all child directories.   
+            
+    - If the user is not in an R project and a path is not specified, then Pathfinder will set the current directory to be the project root. Pathfinder will attempt to gather dependency information about every file in the root directory and all child directories.
+            
+2. Therefore, to use Pathfinder the user must be in an open R project, provide a file path, or both.
+            
+            
+# Load packages and data
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment = NA)
+Sys.setenv(TZ = "US/Central")
+```
+
+```{r message=FALSE}
+library(tidyverse)
+```
+
+## Root directory path
+
+```{r}
+root_dir <- readr::read_rds("data/root_dir.rds")
+```
+
+## List of files under the root directory
+
+```{r}
+root_dir_file_list <- readr::read_rds("data/root_dir_file_list")
+```
+            
+            
+            
+            
+            
+            
+            
+            
+            
+# Create master file table {#create-table}
+
+I want to create a master file list in this Rmd file. It contains the full file path, short name, extension, and type.
+
+## Turn file list into tibble
+
+```{r}
+root_dir_file_table <- tibble(
+  files_under_root = root_dir_file_list
+)
+root_dir_file_table
+```
+            
+            
+## Add a short name variable
+
+Here we create a variable of short names for each file under the root directory. These short names will be used to name list elements later
+
+This regex starts scanning from the end of the string ($) for one or more (+) non-whitespace characters (\\S) preceeded by ((?<=) is a Lookbehind) a forward slash.
+
+```{r}
+root_dir_file_table <- root_dir_file_table %>% 
+  mutate(file_short_name = stringr::str_extract(files_under_root, "(?<=\\/)\\S+$"))
+root_dir_file_table
+```
+            
+            
+## Strip extension from file name
+
+This will be used later when we matching code files with output files based on file name (assumes knitting).
+
+This regex grabs just the file name without the extension. Starting at the beginning of the string (^) it looks for one or more word characters followed by a period.
+
+```{r}
+root_dir_file_table <- root_dir_file_table %>% 
+  mutate(
+    file_name_no_extension = str_extract(file_short_name, "^\\w+(?=\\.)")
+  )
+
+root_dir_file_table
+```
+            
+            
+## Add file extension variable
+
+This regex starts scanning from the beginning of the string for one or more (+) non-whitespace characters (\\S) preceeded by ((?<=) is a Lookbehind) a period.
+
+```{r}
+root_dir_file_table <- root_dir_file_table %>% 
+  mutate(file_extension = stringr::str_extract(file_short_name, "(?<=\\.)\\S+"))
+root_dir_file_table
+```
+            
+            
+## Classify file type
+
+Eventually, I want to figure out a better way to do this part.
+
+```{r}
+root_dir_file_table <- root_dir_file_table %>% 
+  mutate(
+    type = case_when(
+      file_extension %in% c("py", "R", "Rmd") ~ "code",
+      file_extension %in% c("csv", "feather", "rds", "xls", "xlsx") ~ "data",
+      file_extension %in% c("bmp", "doc", "docx", "eps", "html", "jpeg", "jpg",
+                            "nb.html", "pdf", "png", "ps", 
+                            "svg", "tex", "tiff", "wmf") ~ "output"
+    )
+  )
+
+root_dir_file_table
+```
+            
+            
+## Add full file path
+
+```{r}
+root_dir_file_table <- root_dir_file_table %>% 
+  mutate(file_full_path = paste(root_dir, files_under_root, sep = "/"))
+
+root_dir_file_table
+```
+
+[top](#top)
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+# Condence steps above
+
+Later we find that the NA's cause problems. Let's go ahead and get rid of them now.
+
+```{r}
+root_dir_file_table <- tibble(
+  file_short_name  = NA_character_,
+  files_under_root = root_dir_file_list
+) %>% 
+  mutate(
+    file_short_name        = stringr::str_extract(files_under_root, "(?<=\\/)\\S+$"),
+    file_short_name        = if_else(is.na(file_short_name), files_under_root, file_short_name),
+    file_name_no_extension = str_extract(file_short_name, "^\\w+(?=\\.)"),
+    file_name_no_extension = if_else(is.na(file_name_no_extension), files_under_root, file_name_no_extension),
+    file_extension         = stringr::str_extract(file_short_name, "(?<=\\.)\\S+"),
+    file_extension         = if_else(is.na(file_extension), "other", file_extension),
+    type                   = case_when(
+      file_extension %in% c("py", "R", "Rmd") ~ "code",
+      file_extension %in% c("csv", "feather", "rds", "xls", "xlsx") ~ "data",
+      file_extension %in% c("bmp", "doc", "docx", "eps", "html", "jpeg", "jpg",
+                            "nb.html", "pdf", "png", "ps", 
+                            "svg", "tex", "tiff", "wmf") ~ "output",
+      TRUE ~ "other"
+    ),
+    file_full_path         = paste(root_dir, files_under_root, sep = "/")
+  )
+
+root_dir_file_table
+```
+
+[top](#top)
+
+
+
+
+
+
+
+
+
+
+# Read-in all text from code files {#read-text}
+
+This literally grabs all the text (i.e. comments, code, etc.) from every in the master file table that has a type of code.
+
+Also, name the list "readwrite_all_lines" elements with the name of the file that the lines came from using set_names.
+
+```{r}
+root_dir_file_table <- root_dir_file_table %>% 
+  left_join(
+    root_dir_file_table %>% 
+      filter(type == "code") %>%
+      mutate(full_text = purrr::map(file_full_path, readLines)) %>% 
+      select(file_short_name, full_text),
+    by = "file_short_name"
+  )
+
+root_dir_file_table
+```
+
+[top](#top)
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+# User-created functions {#functions}
+
+These are the functions we use below. I'm making them easy to find here at the top of the notebook because you may want to move them over to the Pathfinder package when you are done with testing.
+
+## Create master file table
+      
+I want to create a master file table that contains the full file path, short name, extension, and type.
+      
+```{r}
+create_file_table <- function(.root_dir, .root_dir_file_list) {
+
+  # ===========================================================================
+  # Turn file list into a tibble
+  # ===========================================================================
+  out <- tibble::tibble(
+    file_short_name  = NA_character_, # So it's first
+    files_under_root = .root_dir_file_list
+  ) %>%
+  dplyr::mutate(
+  
+    # Here we create a variable of short names for each file under the root 
+    # directory. These short names will be used to name list elements later
+    # This regex starts scanning from the end of the string ($) for one or 
+    # more (+) non-whitespace characters (\\S) preceeded by ((?<=) is a 
+    # Lookbehind) a forward slash.
+    # NA's cause problems. Replace them.
+    file_short_name = stringr::str_extract(files_under_root, "(?<=\\/)\\S+$"),
+    file_short_name = if_else(is.na(file_short_name), files_under_root, file_short_name),
+    
+    # This regex grabs just the file name without the extension. Starting at 
+    # the beginning of the string (^) it looks for one or more word 
+    # characters followed by a period.
+    # NA's cause problems. Replace them.
+    file_name_no_extension = str_extract(file_short_name, "^\\w+(?=\\.)"),
+    file_name_no_extension = if_else(is.na(file_name_no_extension), files_under_root, file_name_no_extension),
+    
+    # Add file extension variable
+    # This regex starts scanning from the beginning of the string for one 
+    # or more (+) non-whitespace characters (\\S) preceeded by ((?<=) is a 
+    # Lookbehind) a period.
+    # NA's cause problems. Replace them.
+    file_extension = stringr::str_extract(file_short_name, "(?<=\\.)\\S+"),
+    file_extension = if_else(is.na(file_extension), "other", file_extension),
+    
+    # Classify file type
+    # NA's cause problems. Replace them.
+    type = dplyr::case_when(
+      file_extension %in% c("py", "R", "Rmd") ~ "code",
+      file_extension %in% c("csv", "feather", "rds", "xls", "xlsx") ~ "data",
+      file_extension %in% c("bmp", "doc", "docx", "eps", "html", "jpeg", "jpg",
+                            "nb.html", "pdf", "png", "ps",
+                            "svg", "tex", "tiff", "wmf") ~ "output",
+      TRUE ~ "other"
+  ),
+  
+  # Add full file path
+  file_full_path = paste(.root_dir, files_under_root, sep = "/")
+  )
+  
+  # Return table
+  out
+}
+```
+
+```{r}
+root_dir_file_table <- create_file_table(root_dir, root_dir_file_list)
+root_dir_file_table
+```
+
+
+## Read-in all text from code files
+
+This literally grabs all the text (i.e. comments, code, etc.) from every in the master file table that has a type of code.
+
+```{r}
+grab_code_file_text <- function(.data) {
+  out <- .data %>% 
+    dplyr::left_join(
+      .data %>% 
+        dplyr::filter(type == "code") %>%
+        dplyr::mutate(full_text = purrr::map(file_full_path, readLines)) %>% 
+        dplyr::select(file_short_name, full_text),
+      by = "file_short_name"
+    )
+  
+  # Return table
+  out
+}
+```
+
+```{r}
+root_dir_file_table <- grab_code_file_text(.data = root_dir_file_table)
+root_dir_file_table
+```
+
+[top](#top)
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+# Save master file table for use later {#save}
+
+```{r}
+readr::write_rds(root_dir_file_table, "data/root_dir_file_table.rds")
+```
+
+[top](#top)
+  
+&nbsp;
+  
+-------------------------------------------------------------------------------
+    
+```{r echo=FALSE}
+sessionInfo()
+```
+  

@@ -1,0 +1,162 @@
+---
+title: "Inventory the current file directory"
+date: "Created: 2018-01-03 <br> Updated: `r Sys.Date()`"
+output: 
+  html_notebook:
+    css: custom-css.css
+---
+
+# Table of contents
+
+1. [Overview](#overview)   
+2. [User-created functions](#functions)   
+3. [Find root and create a list of all files under the root](#root)   
+4. [Save root path and root directory file list for future](#save-root)   
+
+
+# Overview {#overview}
+
+I needed to come up with a better method for tracking notes/documentation/file dependencies in analysis projects. The goal of Pathfinder is to help track file dependencies in research projects created in RStudio. Perhaps other things later. 
+
+Assumptions:    
+1. Pathfinder will typically be deployed in R projects.   
+
+  * When deployed in R projects, Pathfinder will automatically detect the .Rproj file and the path to that .Rproj file will be se as the root directory.   
+
+  * If the user desires a different behavior (e.g., target a different project than the one the user is currently working in or mapping dependencies among a collection of files that do not exist in an R project) then the path can be specified manually.    
+
+    - The specified path will serve as the root directory. Pathfinder will attempt to gather dependency information about every file in the root directory and all child directories.   
+        
+    - If the user is not in an R project and a path is not specified, then Pathfinder will set the current directory to be the project root. Pathfinder will attempt to gather dependency information about every file in the root directory and all child directories.
+        
+2. Therefore, to use Pathfinder the user must be in an open R project, provide a file path, or both.
+
+
+# Load packages
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment = NA)
+Sys.setenv(TZ = "US/Central")
+```
+
+```{r message=FALSE}
+library(tidyverse)
+```
+
+
+
+
+
+
+
+
+
+
+# User-created functions {#functions}
+
+These are the functions we use below. I'm making them easy to find here at the top of the notebook because you may want to move them over to the Pathfinder package when you are done with testing.
+
+```{r}
+# Find root and get a list of all files under the root
+# Save the path to the current project root directory
+# Make here::here() the default location for finding the project root, but 
+# allow the user to override it
+get_project_root <- function(path = NULL) {
+  if (is.null(path)) {
+    root_dir <- here::here()
+  } else {
+    root_dir <- path
+  }
+  root_dir
+}
+```
+
+```{r}
+# Test to see if there is an .Rproj file at the root
+# The regular expression looks for any file name that ends with ".Rproj"
+check_for_rproj <- function(file_list = root_dir_file_list) {
+  if ( !( any( stringr::str_detect(file_list, "\\.Rproj" )))) {
+    print("Expecting a .Rproj file at the root directory: ", root_dir)
+  } else {
+    print("There is a .Rproj file at the root directory.")
+  }
+}
+```
+
+[top](#top)
+
+
+
+
+
+
+
+
+
+
+
+# Find root and create a list of all files under the root {#root}
+
+## Save the path to the current project root directory
+
+Make here::here() the default location for finding the project root, but allow the user to override it. That should also allow me to separate the package itself from the package development/testing files. 
+
+### Testing default behavior - inside an R project
+
+```{r}
+get_project_root()
+```
+
+### Testing user-provided path
+
+```{r}
+get_project_root("/Users/bradcannell/Dropbox/R/Packages/pathfinder_example_project")
+```
+
+```{r}
+root_dir <- get_project_root("/Users/bradcannell/Dropbox/R/Packages/pathfinder_example_project")
+root_dir
+```
+
+
+## Create a vector containing the names of all the files in the root directory
+
+```{r}
+root_dir_file_list <- list.files(path = root_dir, recursive = TRUE)
+root_dir_file_list
+```
+
+
+## Test to make sure there is an .Rproj file
+
+```{r}
+check_for_rproj(file_list = root_dir_file_list)
+```
+
+[top](#top)
+
+
+
+
+
+
+
+
+
+
+# Save root path and root directory file list for future {#save-root}
+
+```{r}
+readr::write_rds(root_dir, "data/root_dir.rds")
+readr::write_rds(root_dir_file_list, "data/root_dir_file_list")
+```
+
+[top](#top)
+
+&nbsp;
+
+-------------------------------------------------------------------------------
+
+```{r echo=FALSE}
+sessionInfo()
+```

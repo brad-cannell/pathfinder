@@ -1,0 +1,769 @@
+---
+title: "Look for read and write"
+date: "Created: 2018-07-26 <br> Updated: `r Sys.Date()`"
+output: 
+  html_notebook
+---
+
+# Overview
+
+This file is a copy of look_for_read_write.Rmd. Except I'm using it to test the user-defined functions I'm creating.
+
+The big idea is that find all instances of read and write in all folders within a project.
+
+Assumptions:    
+1. An RStudio project is being used.     
+2. Data inputs and outputs use functions that begin with "read" and "write"     
+
+Steps:     
+1. Scan all files and folders in the directory    
+2. Scan R and Rmd files for the words “read” and “write”     
+3. To save time, it might be nice to add the ability to ignore certain files and file types.
+4. Eventually, need to make it stateful
+5. Also, need to figure out how to grab metadata
+
+
+# Table of contents
+
+1. [Inventory the current file directory](#inventory)     
+2. [Create list of files that can be used for read/write](#file-list)     
+3. [Search for read data in files](#read-data)    
+4. [Search for write data in files](#write-data)    
+5. [Add metadata to files data frame](#metadata)   
+6. [Create chart table](#chart-table)     
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment = NA)
+Sys.setenv(TZ = "US/Central")
+```
+
+```{r load_packages, message=FALSE}
+library(tidyverse)
+```
+
+
+
+
+
+
+
+
+
+
+-------------------------------------------------------------------------------
+
+# Inventory the current file directory {#inventory}
+
+-------------------------------------------------------------------------------
+
+In this section, we are going to:       
+* Find and save the file path to the project root    
+* Save the name of every file in the the root directory   
+* Test to make sure there is an .Rproj file (i.e., that we are in an R project)   
+
+-------------------------------------------------------------------------------
+
+# Create list of files that can be used for read/write search {#file-list}
+
+-------------------------------------------------------------------------------
+
+At this point, we know that we are in an R project. We also have a list of all files that are in that project. 
+
+Next, we want to subset the file names to only contain files that would plausibly be used for read/write operations. So far, those file types include:
+
+* .R    
+* .Rmd    
+
+## Create short names
+
+Here we create a vector of short names for the R script and R markdown files. These short names will be used to name list elements below.
+
+Keep only the text after the final "/" in .R and .Rmd file names.
+
+The regular expression below scans through of the full file paths to for all of the .R and .Rmd files in the project (readwrite_file_names). Starting from the end of the string, it looks for one or more word characters, followed by any one non-word character, followed by the rest of the word characters that come after the final "/".
+
+```{r}
+readwrite_file_short_names <- stringr::str_extract(readwrite_file_names, "\\w+\\W\\w+$")
+readwrite_file_short_names
+```
+
+```{r}
+get_project_files(code_file_extensions = c("R", "Rmd"), ignore_files = c("look_for", "diagrammr", "get_"))
+```
+
+## Read in all text from readwrite files
+
+This literally grabs all the text (i.e. comments, code, etc.) from every R script and R markdown file (i.e., readwrite_file_names).
+
+Name the list "readwrite_all_lines" elements with the name of the file that the lines came from using set_names.
+
+```{r}
+readwrite_all_lines <- readwrite_file_names %>% 
+  purrr::map(readLines) %>% 
+  purrr::set_names(readwrite_file_short_names)
+
+# readwrite_all_lines
+```
+
+```{r}
+get_project_files(code_file_extensions = c("R", "Rmd"), ignore_files = c("look_for", "diagrammr", "get_"))
+```
+
+
+
+
+
+
+
+
+
+
+-------------------------------------------------------------------------------
+
+# Search for "read"" data in files {#read-data}
+
+-------------------------------------------------------------------------------
+
+## Now, try with all files
+
+```{r}
+get_project_files(code_file_extensions = c("R", "Rmd"), ignore_files = c("look_for", "diagrammr", "get_"))
+```
+
+```{r}
+get_project_files(code_file_extensions = c("R", "Rmd"), ignore_files = c("look_for", "diagrammr", "get_"))
+```
+
+```{r}
+get_project_files(code_file_extensions = c("R", "Rmd"), ignore_files = c("look_for", "diagrammr", "get_"))
+```
+
+```{r}
+get_project_files(code_file_extensions = c("R", "Rmd"), ignore_files = c("look_for", "diagrammr", "get_"))
+```
+
+```{r}
+get_project_files(code_file_extensions = c("R", "Rmd"), ignore_files = c("look_for", "diagrammr", "get_"))
+```
+
+
+## Identify rows that contain a file name
+
+The regular expression below scans through instances when a read* function was used to read-in data in a .R or .Rmd file. Starting from the beginning of the line it looks for one or more characters, followed by a single '.', followed by any three or more letters (e.g., 'csv' or 'feather').
+
+```{r}
+get_project_files(code_file_extensions = c("R", "Rmd"), ignore_files = c("look_for", "diagrammr", "get_"))
+```
+
+
+## Strip out everything except the name of the file being read-in and its extension
+
+The regular expression below scans through instances when a read* function was used to read-in data in a .R or .Rmd file. 
+
+Starting from the beginning of the line, the first group (i.e., the regex in the first set of parentheses) looks for one or more characters (e.g., "foo"), followed by a single '.', followed by any three or more letters (e.g., 'csv' or 'feather'). 
+
+The second group (i.e., the regex in the second set of parentheses) is a negative lookahead. It tells r not to count the first group as a match if it is followed by an open parenthesis This prevents matching read.* function calls, e.g., "read.csv("
+
+Finally, if the same dataset is read-in to a file more than one time (as "student_scores_01.csv" was in data_clean_student_data_01.R), we only want to keep the dataset name once. That's why we iterate unique through the list using purrr::map.
+
+```{r}
+get_project_files(
+  code_file_extensions = c("R", "Rmd"), 
+  ignore_files = c("look_for", "diagrammr", "get_")
+)
+```
+
+
+At this point, "files_read_in" contains the names of all data sets that were read-in using a .R or .Rmd file in the current R project.
+
+Next we need to store this information in some kind of data structure that can later be used to create a diagram.
+
+
+## Store links between file names an data sets in a data frame    
+
+```{r}
+read_files <- tibble::tibble(
+  name  = names(files_read_in),
+  reads = files_read_in
+) %>% 
+print()
+```
+
+
+# May want to come back to this put it in a structure like the one above
+
+
+
+
+
+
+
+
+
+
+-------------------------------------------------------------------------------
+
+# Search for files that write data
+
+-------------------------------------------------------------------------------
+
+```{r}
+get_project_files(
+  code_file_extensions = c("R", "Rmd"), 
+  ignore_files = c("look_for", "diagrammr", "get_")
+)
+```
+
+
+
+
+
+-------------------------------------------------------------------------------
+
+# Create a file relationship table {#relationship}
+
+-------------------------------------------------------------------------------
+
+Working on doing this manually in look_for_read_write.Rmd first
+
+
+ 
+
+
+
+
+
+
+
+-------------------------------------------------------------------------------
+
+# Add metadata to files data frame {#metadata}
+
+-------------------------------------------------------------------------------
+
+## Get date created
+
+This isn't available directly through any R function. However, I am in the habit of recording the created date at the top of most of my R files. I can use a regular expression to search all the .R and .Rmd files for a created date.
+
+```{r}
+created_index <- purrr::map(readwrite_all_lines, stringr::str_detect, 
+                            "Created:\\s\\d{4}\\-\\d{2}\\-\\d{2}")
+created_dates <- purrr::map2(readwrite_all_lines, created_index, `[`)
+created_dates <- purrr::map(created_dates, str_extract, "\\d{4}\\-\\d{2}\\-\\d{2}")
+created_dates[lengths(created_dates) == 0] <- NA
+created_dates <- as_tibble(created_dates)
+created_dates <- gather(created_dates, name, date)
+created_dates
+```
+
+
+## Get the last modified date
+
+Also, use the same regular expression from above to shorten the file name after we extract the modified date.
+
+The regular expression below scans through of the full file paths to for all of the .R and .Rmd files in the project (readwrite_file_names). Starting from the end of the string, it looks for one or more word characters, followed by any one non-word character, followed by the rest of the word characters that come after the final "/".
+
+```{r warning=FALSE}
+last_modified <- tibble::tibble(name = readwrite_file_names) %>% 
+  mutate(
+    file_info = purrr::map(name, file.info),
+    name = stringr::str_extract(readwrite_file_names, "\\w+\\W\\w+$")
+  ) %>% 
+  unnest() %>% 
+  select(name, mtime) %>% 
+  print()
+```
+
+
+## Merge created dates with date last modified
+
+```{r}
+readwrite_dates <- created_dates %>% 
+  left_join(last_modified, by = "name") %>% 
+  print()
+```
+
+
+## Merge dates with data read-in and data written-out
+
+```{r}
+merged_read_write_files <- readwrite_dates %>% 
+  left_join(read_files, by = "name") %>% 
+  left_join(write_files, by = "name") %>% 
+  print()
+```
+
+
+## Clean up
+
+```{r}
+rm(created_dates, created_index, last_modified, readwrite_all_lines, readwrite_dates)
+```
+
+
+
+
+
+
+
+
+
+
+-------------------------------------------------------------------------------
+
+# Create chart table {#chart-table}
+
+-------------------------------------------------------------------------------
+
+Below I manually created an example node_df and edge_df. Try to figure out how to unpack merged_read_write_files and make the flow chart from real data.  
+
+## Reduce to a single list of:
+
+* Data   
+* Code     
+* Output   
+
+root directory file list has all files in the project.
+
+```{r}
+root_dir_file_list
+```
+
+## Filter out the files I don't want (i.e., not code, data, or output). 
+
+I think excluding anything that doesn't have a file extension should work for this purpose.
+
+This regex returns:    
+  * One or more word characters (equal to [a-zA-Z0-9_])   
+  * Followed by a single "."   
+  * Followed by one or more word characters   
+  * Optionally (i.e., ?) followed by another "." and one or more word characters (this gets the .nb.html files)     
+  
+```{r}
+files_w_extensions <- stringr::str_extract(root_dir_file_list, "\\w+\\.\\w+(\\.\\w+)?")
+files_w_extensions <- files_w_extensions[!is.na(files_w_extensions)]
+files_w_extensions
+```
+
+
+## Ignore files
+
+Ignore files that I don't want included in the flow chart. This may be the case for files that are still in the developmental stage in a real research project as well.
+
+Below I manually enter strings that I want to ignore. I guess the user would have to do the same in a real research project.
+
+```{r rows.print=13}
+ignore_index <- stringr::str_detect(files_w_extensions, "look_for_|diagrammr|\\.Rproj|LICENSE|README") 
+data_code_output_files <- files_w_extensions[!ignore_index]
+data_code_output_files <- tibble(label = data_code_output_files)
+data_code_output_files
+```
+
+_The way I ignored the files above was pretty hacky and manual. In the future, I want to figure out a more elegant way to work this into the package._
+
+
+## Then, identify the type of each.
+
+For now, I am manually entering in file extensions that relate to data, code, and output respectively. I may want to make this more automated in the future.
+
+```{r}
+data_extentions   <- c(".csv", ".feather", ".xlsx", ".rds")
+data_extentions   <- paste(data_extentions, collapse = "|")
+code_extentions   <- c(".R", ".Rmd", ".md")
+code_extentions   <- paste(code_extentions, collapse = "|")
+output_extentions <- c(".html")
+output_extentions <- paste(output_extentions, collapse = "|")
+```
+
+```{r rows.print=13}
+data_code_output_files <- data_code_output_files %>% 
+  mutate(
+    id = row_number(),
+    type = case_when(
+      stringr::str_detect(label, data_extentions)   ~ "data",
+      stringr::str_detect(label, code_extentions)   ~ "code",
+      stringr::str_detect(label, output_extentions) ~ "output",
+      TRUE ~ "Other"
+    )
+  ) %>% 
+  select(id, label, type) %>% 
+  print()
+```
+
+
+At this point, we essentially have the nodes data. 
+
+
+## What's the relationship between read/write and to/from?
+
+if from is data, to reads_in from 
+
+if from is code, from writes_out to 
+
+```{r}
+read_files_unnest <- tidyr::unnest(read_files)
+read_files_unnest
+```
+
+Data files can be used in (read into) more than one code file.   
+So, each data file in name can have more than one file (list) in is_read_into. However, we don't have any data files in this particular project that are read into more than one code file.    
+We should probably test this out...
+
+```{r}
+read_files_unnest %>% 
+  rename(is_read_into = name, name = reads) %>% 
+  select(name, is_read_into)
+```
+
+
+```{r}
+write_files_unnest <- tidyr::unnest(write_files)
+write_files_unnest
+```
+
+Data files can't be created (written our from) in more than one code file (unless there's a mistake).   
+So, each data file can only have one value for written out from.
+
+```{r}
+write_files_unnest %>% 
+  rename(written_out_from = name, name = writes) %>% 
+  select(name, written_out_from) 
+```
+
+
+```{r rows.print=13}
+# This might be stupid
+data_code_output_files %>% 
+  mutate(
+    reads_in = NA,
+    writes_out = NA,
+    is_read_into = NA,
+    written_out_from = NA
+  )
+```
+
+Rules:    
+1. student_scores_01.csv is read into data_clean_student_data_01.R because data_clean_student_data_01.R and student_scores_01.csv are in the same row in read_files_unnest.
+
+Is label in the name column of read_files_unnest?
+Is 
+
+```{r rows.print=13}
+data_code_output_files %>% 
+  left_join(read_files, by = c("label" = "name")) %>% 
+  left_join(write_files, by = c("label" = "name")) %>% 
+  mutate(
+    is_read_into = if_else(label),
+    written_out_from = NA
+  )
+
+  # mutate(
+  #   level = case_when(
+  #     type == "data" & !(label %in% write_files_unnest$writes) ~ 1L,
+  #     type == "code" & !(label %in% read_files_unnest$name) ~ 1L
+  #   )
+  # )
+```
+
+
+
+
+
+
+
+
+
+
+
+
+## Tangent - but useful maybe     
+## Find the level 1 nodes
+
+1. A node is a level 1 node if it is type == data AND it is not written out of a code file.     
+2. A node is a level 1 node if it is type == code AND it does not read in a data file (e.g., simulation).   
+
+Let's walk through these rules
+
+```{r rows.print=13}
+data_code_output_files <- data_code_output_files %>% 
+  mutate(
+    level = case_when(
+      type == "data" & !(label %in% write_files_unnest$writes) ~ 1L,
+      type == "code" & !(label %in% read_files_unnest$name) ~ 1L
+    )
+  ) %>% 
+  print()
+```
+
+```{r rows.print=14}
+# Check to make sure the code would work if we had a simulation file at the top level.
+
+# data_code_output_files %>% 
+#   bind_rows(
+#     tibble(
+#       id = 14,
+#       label = "simulations.R",
+#       type = "code"
+#     )
+#   )%>% 
+#   mutate(
+#     level = case_when(
+#       type == "data" & !(label %in% write_files_unnest$writes) ~ 1L,
+#       type == "code" & !(label %in% read_files_unnest$name) ~ 1L
+#     )
+#   )
+```
+
+Ok, so now we have our top level files identified.
+
+
+## Find level 2 nodes
+
+1. A node is a level 2 node if it is type == code AND it reads-in a level 1 data file.      
+2. A node is a level 2 node if it is type == data AND it is written out by a level 1 code file (e.g., simulation).     
+
+Another way to think about it is:     
+1. Start from level 1 node. If it's type == data then any file that reads it in is level 2.     
+2. Start from level 1 node. If it's type == code then any file that it writes out is level 2.     
+
+Let's walk through these rules
+
+```{r rows.print=13}
+data_code_output_files %>% 
+  mutate(
+    # Treat level 1 as a special case for right now
+    level = case_when(
+      type == "data" & !(label %in% write_files_unnest$writes) ~ 1L,
+      type == "code" & !(label %in% read_files_unnest$name) ~ 1L
+    )
+  ) %>% 
+  mutate(
+    level = case_when(
+      label filter(data_code_output_files, level == 1) %>% pull(label)
+    )
+  )
+```
+
+
+
+
+
+data_clean_student_data_01.R	
+data_clean_student_data_02.Rmd
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+What's the relationship between read/write and to/from?
+
+if from is data, to reads_in from 
+
+if from is code, from writes_out to 
+
+```{r rows.print=13}
+# This might be stupid
+data_code_output_files %>% 
+  mutate(
+    reads_in = NA,
+    writes_out = NA,
+    is_read_into = NA,
+    written_out_from = NA
+  )
+```
+
+```{r}
+read_files_unnest <- tidyr::unnest(read_files)
+read_files_unnest
+```
+
+```{r}
+write_files_unnest <- tidyr::unnest(write_files)
+write_files_unnest
+```
+
+
+Join where appropriate
+
+```{r rows.print=13}
+data_code_output_files 
+```
+
+Remove type for now
+
+```{r rows.print=13}
+# Edges
+# if from is data, to reads_in from 
+# if from is code, from writes_out to 
+data_code_output_files_key <- data_code_output_files %>% 
+  select(label, id, -type)
+data_code_output_files_key
+```
+
+Join data files that are read with id numbers
+
+```{r}
+read_files_unnest
+```
+
+```{r}
+read_files_unnest %>% 
+  left_join(data_code_output_files_key, by = c("name" = "label")) %>% 
+  rename(read_id = id)
+```
+
+
+I'm too tired to figure this out right now....
+
+Join data files that are written with id numbers
+
+```{r}
+write_files_unnest
+```
+
+```{r}
+write_files_unnest %>% 
+  left_join(data_code_output_files_key, by = c("name" = "label")) %>% 
+  rename(read_id = id)
+```
+
+
+Then, identify data that is never read-in. That is the top level. 
+
+So, how do I turn this into something like the nodes and edges df's below?
+
+* Every element needs a row (files and data)
+
+* Every element needs to be given an id number
+
+* Each id needs the appropriate "from" and "to" information (convert read and write?)
+
+
+
+
+
+
+
+
+
+
+-------------------------------------------------------------------------------
+
+# Create flow chart
+
+-------------------------------------------------------------------------------
+
+Need to turn read_files and write files into a node_df and egde_df
+
+I may want to make this its own Rmd file...
+
+```{r rows.print=13}
+# Create a simple NDF
+nodes <- DiagrammeR::create_node_df(
+  n = 13,
+  
+  type = c("data", "data", "code", "code", "data", "data", "data", "output", 
+           "code", "data", "output", "code", "output"),
+  
+  label = c("student_scores_01.csv", "student_scores_02.xlsx", 
+            "data_clean_student_data_01.R", "data_clean_student_data_02.Rmd",
+            "student_scores_clean_01.feather", "student_scores_clean_02.Rds",
+            "student_scores_clean_02.xlsx", "data_clean_student_data_02.nb.html",
+            "data_merge.Rmd", "all_students.feather", "data_merge.nb.html",
+            "analysis_descriptive.Rmd", "analysis_descriptive.nb.html"),
+  
+  # Level controls hierarchy. This may be the tricky part to program automatically
+  level = c(1, 1, 2, 2, 3, 3, 3, 3, 4, 5, 5, 6, 7)
+)
+
+# Color by type
+nodes <- nodes %>% 
+  mutate(
+    color = case_when(
+      type == "data"   ~ "orange",
+      type == "code"   ~ "lightblue",
+      type == "output" ~ "lightgreen"
+    )
+  )
+
+# Shape by type - can also use icons
+# http://datastorm-open.github.io/visNetwork/legend.html
+nodes <- nodes %>% 
+  mutate(
+    shape = case_when(
+      type == "data"   ~ "box",
+      type == "code"   ~ "box",
+      type == "output" ~ "box"
+    )
+  )
+
+
+# Can use a title attribute to create a tool tip
+
+nodes
+```
+
+```{r}
+class(nodes)
+```
+
+```{r rows.print=12}
+# Create a simple EDF
+edges <- DiagrammeR::create_edge_df(
+    from = c(1, 2, 3, 4, 4, 4, 5, 6, 9,  9,  10, 12),
+    to   = c(3, 4, 5, 6, 7, 8, 9, 9, 10, 11, 12, 13)
+)
+edges
+```
+
+```{r}
+# Create the graph object,
+# incorporating the NDF and
+# the EDF, and, providing
+# some global attributes
+graph <- DiagrammeR::create_graph(
+  nodes_df = nodes,
+  edges_df = edges
+)
+graph
+```
+
+```{r}
+# View the graph
+DiagrammeR::render_graph(graph, output = "visNetwork") %>% 
+  visNetwork::visEdges(arrows = "to") %>% 
+  visNetwork::visOptions(selectedBy = list(variable = "type", multiple = TRUE)) %>% 
+  visNetwork::visHierarchicalLayout(direction = "LR", levelSeparation = 100) 
+```
+
+```{r}
+visNetwork::visNetwork(nodes, edges) %>% 
+  visNetwork::visEdges(arrows = "to") %>% 
+  visNetwork::visOptions(selectedBy = list(variable = "type", multiple = TRUE)) %>% 
+  visNetwork::visHierarchicalLayout(direction = "LR", levelSeparation = 100)
+```
+
+
+Color nodes differently if they don't read anything in, i.e, top-level?
+
+
+
+
+
+
+&nbsp;
+
+-------------------------------------------------------------------------------
+
+```{r echo=FALSE}
+sessionInfo()
+```

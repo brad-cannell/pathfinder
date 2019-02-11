@@ -1,0 +1,169 @@
+---
+title: "Pathfinder Example Project Manual Graph"
+date: "Created: 2018-07-28 <br> Updated: `r Sys.Date()`"
+output: 
+  html_notebook
+---
+
+
+# Overview
+
+Here I'm just manually creating what I want the final dependency graph to look like. This should help as I'm developing the actual package.
+
+
+# Load packages and data
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment = NA)
+Sys.setenv(TZ = "US/Central")
+```
+
+```{r message=FALSE}
+library(tidyverse)
+```
+
+# Nodes
+
+```{r rows.print=13}
+# Create a simple NDF
+nodes <- DiagrammeR::create_node_df(
+  n = 19,
+  
+  type = c(
+    "data",   # 1
+    "data",   # 2
+    "code",   # 3
+    "code",   # 4
+    "code",   # 5
+    "data",   # 6
+    "data",   # 7
+    "data",   # 8
+    "output", # 9
+    "code",   # 10
+    "data",   # 11
+    "output", # 12
+    "code",   # 13
+    "code",   # 14
+    "code",   # 15
+    "output", # 16
+    "output", # 17
+    "output", # 18
+    "output"  # 19
+  ),
+  
+  title = c(
+    "scores_01.csv",                # 1
+    "scores_02.xlsx",               # 2
+    "python_model.py",              # 3
+    "data_clean_data_01.R",         # 4
+    "data_clean_data_02.Rmd",       # 5
+    "scores_clean_01.feather",      # 6
+    "scores_clean_02.rds",          # 7
+    "scores_clean_02.xlsx",         # 8
+    "data_clean_data_02.nb.html",   # 9
+    "data_append.Rmd",              # 10
+    "all_scores.feather",           # 11
+    "data_append.nb.html",          # 12
+    "analysis_descriptive.Rmd",     # 13
+    "analysis_table_01.Rmd",        # 14
+    "analysis_models.Rmd",          # 15
+    "analysis_descriptive.nb.html", # 16
+    "histogram.png",                # 17
+    "analysis_table_01.docx",       # 18
+    "models.pdf"                    # 19
+  ),
+  
+  label = c(
+    "csv",     # 1
+    "xlsx",    # 2
+    "py",      # 3
+    "R",       # 4
+    "Rmd",     # 5
+    "feather", # 6
+    "rds",     # 7
+    "xlsx",    # 8
+    "html",    # 9
+    "Rmd",     # 10
+    "feather", # 11
+    "html",    # 12
+    "Rmd",     # 13
+    "Rmd",     # 14
+    "Rmd",     # 15
+    "png",     # 16
+    "pdf",     # 17
+    "docx",    # 18
+    "pdf"      # 19
+  ),
+  
+  # Level controls hierarchy. This may be the tricky part to program automatically
+  level = c(
+    1, 1, 1,
+    2, 2,
+    3, 3, 3, 3,
+    4,
+    5, 5,
+    6, 6, 6,
+    7, 7, 7, 7
+  )
+)
+
+# Color by type
+nodes <- nodes %>% 
+  mutate(
+    color = case_when(
+      type == "data"   ~ "orange",
+      type == "code"   ~ "lightblue",
+      type == "output" ~ "lightgreen"
+    )
+  )
+
+# Shape by type - can also use icons
+# http://datastorm-open.github.io/visNetwork/legend.html
+nodes <- nodes %>% 
+  mutate(
+    shape = case_when(
+      type == "data"   ~ "box",
+      type == "code"   ~ "box",
+      type == "output" ~ "box"
+    )
+  )
+
+nodes
+```
+
+
+# Edges
+
+```{r}
+# Create a simple EDF
+edges <- DiagrammeR::create_edge_df(
+    from = c(1, 2,  3, 4, 5, 5, 5,  6,  7, 10, 10, 11, 11, 11, 13, 13, 14, 15),
+    to   = c(4, 5, 15, 6, 7, 8, 9, 10, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+)
+
+edges
+```
+
+
+# Graph
+
+```{r}
+visNetwork::visNetwork(nodes, edges, width = "100%") %>% 
+  visNetwork::visEdges(arrows = "to") %>% 
+  visNetwork::visOptions(selectedBy = list(variable = "type", multiple = TRUE)) %>% 
+  visNetwork::visHierarchicalLayout(direction = "UD", levelSeparation = 70) %>% 
+  visNetwork::visPhysics(enable = FALSE)
+```
+
+
+I think this is the best I can do with this package. I may also want to think about checking out other packages for making diagrams. 
+
+Is there anything that works with Google Drawing or Google Slides?
+
+&nbsp;
+
+-------------------------------------------------------------------------------
+
+```{r echo=FALSE}
+sessionInfo()
+```
