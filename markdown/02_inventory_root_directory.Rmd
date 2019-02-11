@@ -3,16 +3,10 @@ title: "Inventory the current file directory"
 date: "Created: 2018-01-03 <br> Updated: `r Sys.Date()`"
 output: 
   html_notebook:
+    toc: true
+    toc_float: true
     css: custom-css.css
 ---
-
-# Table of contents
-
-1. [Overview](#overview)   
-2. [User-created functions](#functions)   
-3. [Find root and create a list of all files under the root](#root)   
-4. [Save root path and root directory file list for future](#save-root)   
-
 
 # Overview {#overview}
 
@@ -42,34 +36,6 @@ Sys.setenv(TZ = "US/Central")
 ```{r message=FALSE}
 library(tidyverse)
 ```
-
-
-
-
-
-
-
-
-
-
-# User-created functions {#functions}
-
-These are the functions we use below. I'm making them easy to find here at the top of the notebook because you may want to move them over to the Pathfinder package when you are done with testing.
-
-```{r}
-# Test to see if there is an .Rproj file at the root
-# The regular expression looks for any file name that ends with ".Rproj"
-check_for_rproj <- function(file_list = root_dir_file_list) {
-  if ( !( any( stringr::str_detect(file_list, "\\.Rproj" )))) {
-    print("Expecting a .Rproj file at the root directory: ", root_dir)
-  } else {
-    print("There is a .Rproj file at the root directory.")
-  }
-}
-```
-
-[top](#top)
-
 
 
 
