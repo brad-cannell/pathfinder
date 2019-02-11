@@ -172,7 +172,7 @@ $(document).ready(function () {
 
 
 <h1 class="title toc-ignore">Inventory the current file directory</h1>
-<h4 class="date"><em>Created: 2018-01-03 <br> Updated: 2018-08-07</em></h4>
+<h4 class="date"><em>Created: 2018-01-03 <br> Updated: 2019-02-10</em></h4>
 
 </div>
 
@@ -213,8 +213,9 @@ $(document).ready(function () {
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeSh0aWR5dmVyc2UpXG5gYGAifQ== -->
-<pre class="r"><code>library(tidyverse)</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxubGlicmFyeSh0aWR5dmVyc2UpXG5gYGBcbmBgYCJ9 -->
+<p><code>r</code>r library(tidyverse)</p>
+<pre><code></code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
@@ -224,34 +225,9 @@ $(document).ready(function () {
 <p>These are the functions we use below. I’m making them easy to find here at the top of the notebook because you may want to move them over to the Pathfinder package when you are done with testing.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBGaW5kIHJvb3QgYW5kIGdldCBhIGxpc3Qgb2YgYWxsIGZpbGVzIHVuZGVyIHRoZSByb290XG4jIFNhdmUgdGhlIHBhdGggdG8gdGhlIGN1cnJlbnQgcHJvamVjdCByb290IGRpcmVjdG9yeVxuIyBNYWtlIGhlcmU6OmhlcmUoKSB0aGUgZGVmYXVsdCBsb2NhdGlvbiBmb3IgZmluZGluZyB0aGUgcHJvamVjdCByb290LCBidXQgXG4jIGFsbG93IHRoZSB1c2VyIHRvIG92ZXJyaWRlIGl0XG5nZXRfcHJvamVjdF9yb290IDwtIGZ1bmN0aW9uKHBhdGggPSBOVUxMKSB7XG4gIGlmIChpcy5udWxsKHBhdGgpKSB7XG4gICAgcm9vdF9kaXIgPC0gaGVyZTo6aGVyZSgpXG4gIH0gZWxzZSB7XG4gICAgcm9vdF9kaXIgPC0gcGF0aFxuICB9XG4gIHJvb3RfZGlyXG59XG5gYGAifQ== -->
-<pre class="r"><code># Find root and get a list of all files under the root
-# Save the path to the current project root directory
-# Make here::here() the default location for finding the project root, but 
-# allow the user to override it
-get_project_root &lt;- function(path = NULL) {
-  if (is.null(path)) {
-    root_dir &lt;- here::here()
-  } else {
-    root_dir &lt;- path
-  }
-  root_dir
-}</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBUZXN0IHRvIHNlZSBpZiB0aGVyZSBpcyBhbiAuUnByb2ogZmlsZSBhdCB0aGUgcm9vdFxuIyBUaGUgcmVndWxhciBleHByZXNzaW9uIGxvb2tzIGZvciBhbnkgZmlsZSBuYW1lIHRoYXQgZW5kcyB3aXRoIFwiLlJwcm9qXCJcbmNoZWNrX2Zvcl9ycHJvaiA8LSBmdW5jdGlvbihmaWxlX2xpc3QgPSByb290X2Rpcl9maWxlX2xpc3QpIHtcbiAgaWYgKCAhKCBhbnkoIHN0cmluZ3I6OnN0cl9kZXRlY3QoZmlsZV9saXN0LCBcIlxcXFwuUnByb2pcIiApKSkpIHtcbiAgICBwcmludChcIkV4cGVjdGluZyBhIC5ScHJvaiBmaWxlIGF0IHRoZSByb290IGRpcmVjdG9yeTogXCIsIHJvb3RfZGlyKVxuICB9IGVsc2Uge1xuICAgIHByaW50KFwiVGhlcmUgaXMgYSAuUnByb2ogZmlsZSBhdCB0aGUgcm9vdCBkaXJlY3RvcnkuXCIpXG4gIH1cbn1cbmBgYCJ9 -->
-<pre class="r"><code># Test to see if there is an .Rproj file at the root
-# The regular expression looks for any file name that ends with &quot;.Rproj&quot;
-check_for_rproj &lt;- function(file_list = root_dir_file_list) {
-  if ( !( any( stringr::str_detect(file_list, &quot;\\.Rproj&quot; )))) {
-    print(&quot;Expecting a .Rproj file at the root directory: &quot;, root_dir)
-  } else {
-    print(&quot;There is a .Rproj file at the root directory.&quot;)
-  }
-}</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuIyBGaW5kIHJvb3QgYW5kIGdldCBhIGxpc3Qgb2YgYWxsIGZpbGVzIHVuZGVyIHRoZSByb290XG4jIFNhdmUgdGhlIHBhdGggdG8gdGhlIGN1cnJlbnQgcHJvamVjdCByb290IGRpcmVjdG9yeVxuIyBNYWtlIGhlcmU6OmhlcmUoKSB0aGUgZGVmYXVsdCBsb2NhdGlvbiBmb3IgZmluZGluZyB0aGUgcHJvamVjdCByb290LCBidXQgXG4jIGFsbG93IHRoZSB1c2VyIHRvIG92ZXJyaWRlIGl0XG5nZXRfcHJvamVjdF9yb290IDwtIGZ1bmN0aW9uKHBhdGggPSBOVUxMKSB7XG4gIGlmIChpcy5udWxsKHBhdGgpKSB7XG4gICAgcm9vdF9kaXIgPC0gaGVyZTo6aGVyZSgpXG4gIH0gZWxzZSB7XG4gICAgcm9vdF9kaXIgPC0gcGF0aFxuICB9XG4gIHJvb3RfZGlyXG59XG5gYGBcbmBgYCJ9 -->
+<p><code>r</code>r # Find root and get a list of all files under the root # Save the path to the current project root directory # Make here::here() the default location for finding the project root, but # allow the user to override it get_project_root &lt;- function(path = NULL) { if (is.null(path)) { root_dir &lt;- here::here() } else { root_dir &lt;- path } root_dir }</p>
+<pre><code></code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
@@ -269,8 +245,8 @@ check_for_rproj &lt;- function(file_list = root_dir_file_list) {
 <!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZ2V0X3Byb2plY3Rfcm9vdCgpXG5gYGAifQ== -->
 <pre class="r"><code>get_project_root()</code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFwiL1VzZXJzL2JyYWRjYW5uZWxsL0Ryb3Bib3gvUi9yX25vdGVzL3BhdGhmaW5kZXJfZGV2ZWxvcG1lbnRcIlxuIn0= -->
-<pre><code>[1] &quot;/Users/bradcannell/Dropbox/R/r_notes/pathfinder_development&quot;</code></pre>
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFwiL1VzZXJzL2JyYWRjYW5uZWxsL0Ryb3Bib3gvUi9wYWNrYWdlcy9wYXRoZmluZGVyXCJcbiJ9 -->
+<pre><code>[1] &quot;/Users/bradcannell/Dropbox/R/packages/pathfinder&quot;</code></pre>
 <!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
@@ -304,23 +280,23 @@ root_dir</code></pre>
 <h2>Create a vector containing the names of all the files in the root directory</h2>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucm9vdF9kaXJfZmlsZV9saXN0IDwtIGxpc3QuZmlsZXMocGF0aCA9IHJvb3RfZGlyLCByZWN1cnNpdmUgPSBUUlVFKVxucm9vdF9kaXJfZmlsZV9saXN0XG5gYGAifQ== -->
-<pre class="r"><code>root_dir_file_list &lt;- list.files(path = root_dir, recursive = TRUE)
-root_dir_file_list</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxucm9vdF9kaXJfZmlsZV9saXN0IDwtIGxpc3QuZmlsZXMocGF0aCA9IHJvb3RfZGlyLCByZWN1cnNpdmUgPSBUUlVFKVxucm9vdF9kaXJfZmlsZV9saXN0XG5gYGBcbmBgYCJ9 -->
+<p><code>r</code>r root_dir_file_list &lt;- list.files(path = root_dir, recursive = TRUE) root_dir_file_list</p>
+<pre><code></code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiIFsxXSBcImRhdGEvYWxsX3Njb3Jlcy5mZWF0aGVyXCIgICAgICAgICAgICAgICBcImRhdGEvc2NvcmVzXzAxX2NsZWFuLmZlYXRoZXJcIiAgICAgICAgIFxuIFszXSBcImRhdGEvc2NvcmVzXzAxLmNzdlwiICAgICAgICAgICAgICAgICAgICBcImRhdGEvc2NvcmVzXzAyX2NsZWFuLnJkc1wiICAgICAgICAgICAgIFxuIFs1XSBcImRhdGEvc2NvcmVzXzAyX2NsZWFuLnhsc3hcIiAgICAgICAgICAgICBcImRhdGEvc2NvcmVzXzAyLnhsc3hcIiAgICAgICAgICAgICAgICAgIFxuIFs3XSBcIkxJQ0VOU0VcIiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcIm1hcmtkb3duL2FuYWx5c2lzX2Rlc2NyaXB0aXZlLm5iLmh0bWxcIlxuIFs5XSBcIm1hcmtkb3duL2FuYWx5c2lzX2Rlc2NyaXB0aXZlLlJtZFwiICAgICBcIm1hcmtkb3duL2FuYWx5c2lzX3RhYmxlXzAxLmRvY3hcIiAgICAgIFxuWzExXSBcIm1hcmtkb3duL2FuYWx5c2lzX3RhYmxlXzAxLlJtZFwiICAgICAgICBcIm1hcmtkb3duL2RhdGFfYXBwZW5kLm5iLmh0bWxcIiAgICAgICAgIFxuWzEzXSBcIm1hcmtkb3duL2RhdGFfYXBwZW5kLlJtZFwiICAgICAgICAgICAgICBcIm1hcmtkb3duL2RhdGFfY2xlYW5fZGF0YV8wMi5uYi5odG1sXCIgIFxuWzE1XSBcIm1hcmtkb3duL2RhdGFfY2xlYW5fZGF0YV8wMi5SbWRcIiAgICAgICBcIm1hcmtkb3duL2hpc3RvZ3JhbS5wbmdcIiAgICAgICAgICAgICAgIFxuWzE3XSBcIm1hcmtkb3duL21vZGVscy5wZGZcIiAgICAgICAgICAgICAgICAgICBcIm1hcmtkb3duL21vZGVscy5SbWRcIiAgICAgICAgICAgICAgICAgIFxuWzE5XSBcIk5PVEVTXCIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcInBhdGhmaW5kZXJfZXhhbXBsZV9wcm9qZWN0LlJwcm9qXCIgICAgIFxuWzIxXSBcInB5dGhvbi9weXRob25fbW9kZWwucHlcIiAgICAgICAgICAgICAgICBcInIvZGF0YV9jbGVhbl9kYXRhXzAxLlJcIiAgICAgICAgICAgICAgIFxuWzIzXSBcInRlc3RfdGV4dF9maWxlXzAxXCIgICAgICAgICAgICAgICAgICAgIFxuIn0= -->
-<pre><code> [1] &quot;data/all_scores.feather&quot;               &quot;data/scores_01_clean.feather&quot;         
- [3] &quot;data/scores_01.csv&quot;                    &quot;data/scores_02_clean.rds&quot;             
- [5] &quot;data/scores_02_clean.xlsx&quot;             &quot;data/scores_02.xlsx&quot;                  
- [7] &quot;LICENSE&quot;                               &quot;markdown/analysis_descriptive.nb.html&quot;
- [9] &quot;markdown/analysis_descriptive.Rmd&quot;     &quot;markdown/analysis_table_01.docx&quot;      
-[11] &quot;markdown/analysis_table_01.Rmd&quot;        &quot;markdown/data_append.nb.html&quot;         
-[13] &quot;markdown/data_append.Rmd&quot;              &quot;markdown/data_clean_data_02.nb.html&quot;  
-[15] &quot;markdown/data_clean_data_02.Rmd&quot;       &quot;markdown/histogram.png&quot;               
-[17] &quot;markdown/models.pdf&quot;                   &quot;markdown/models.Rmd&quot;                  
-[19] &quot;NOTES&quot;                                 &quot;pathfinder_example_project.Rproj&quot;     
-[21] &quot;python/python_model.py&quot;                &quot;r/data_clean_data_01.R&quot;               
-[23] &quot;test_text_file_01&quot;                    </code></pre>
+<!-- rnb-output-begin eyJkYXRhIjoiIFsxXSBcXGRhdGEvYWxsX3Njb3Jlcy5mZWF0aGVyXFwgICAgICAgICAgICAgICBcXGRhdGEvc2NvcmVzXzAxX2NsZWFuLmZlYXRoZXJcXCAgICAgICAgIFxuIFszXSBcXGRhdGEvc2NvcmVzXzAxLmNzdlxcICAgICAgICAgICAgICAgICAgICBcXGRhdGEvc2NvcmVzXzAyX2NsZWFuLnJkc1xcICAgICAgICAgICAgIFxuIFs1XSBcXGRhdGEvc2NvcmVzXzAyX2NsZWFuLnhsc3hcXCAgICAgICAgICAgICBcXGRhdGEvc2NvcmVzXzAyLnhsc3hcXCAgICAgICAgICAgICAgICAgIFxuIFs3XSBcXExJQ0VOU0VcXCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcXG1hcmtkb3duL2FuYWx5c2lzX2Rlc2NyaXB0aXZlLm5iLmh0bWxcXFxuIFs5XSBcXG1hcmtkb3duL2FuYWx5c2lzX2Rlc2NyaXB0aXZlLlJtZFxcICAgICBcXG1hcmtkb3duL2FuYWx5c2lzX3RhYmxlXzAxLmRvY3hcXCAgICAgIFxuWzExXSBcXG1hcmtkb3duL2FuYWx5c2lzX3RhYmxlXzAxLlJtZFxcICAgICAgICBcXG1hcmtkb3duL2RhdGFfYXBwZW5kLm5iLmh0bWxcXCAgICAgICAgIFxuWzEzXSBcXG1hcmtkb3duL2RhdGFfYXBwZW5kLlJtZFxcICAgICAgICAgICAgICBcXG1hcmtkb3duL2RhdGFfY2xlYW5fZGF0YV8wMi5uYi5odG1sXFwgIFxuWzE1XSBcXG1hcmtkb3duL2RhdGFfY2xlYW5fZGF0YV8wMi5SbWRcXCAgICAgICBcXG1hcmtkb3duL2hpc3RvZ3JhbS5wbmdcXCAgICAgICAgICAgICAgIFxuWzE3XSBcXG1hcmtkb3duL21vZGVscy5wZGZcXCAgICAgICAgICAgICAgICAgICBcXG1hcmtkb3duL21vZGVscy5SbWRcXCAgICAgICAgICAgICAgICAgIFxuWzE5XSBcXE5PVEVTXFwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcXHBhdGhmaW5kZXJfZXhhbXBsZV9wcm9qZWN0LlJwcm9qXFwgICAgIFxuWzIxXSBcXHB5dGhvbi9weXRob25fbW9kZWwucHlcXCAgICAgICAgICAgICAgICBcXHIvZGF0YV9jbGVhbl9kYXRhXzAxLlJcXCAgICAgICAgICAgICAgIFxuWzIzXSBcXHRlc3RfdGV4dF9maWxlXzAxXFwgICAgICAgICAgICAgICAgICAgIFxuIn0= -->
+<pre><code> [1] \data/all_scores.feather\               \data/scores_01_clean.feather\         
+ [3] \data/scores_01.csv\                    \data/scores_02_clean.rds\             
+ [5] \data/scores_02_clean.xlsx\             \data/scores_02.xlsx\                  
+ [7] \LICENSE\                               \markdown/analysis_descriptive.nb.html\
+ [9] \markdown/analysis_descriptive.Rmd\     \markdown/analysis_table_01.docx\      
+[11] \markdown/analysis_table_01.Rmd\        \markdown/data_append.nb.html\         
+[13] \markdown/data_append.Rmd\              \markdown/data_clean_data_02.nb.html\  
+[15] \markdown/data_clean_data_02.Rmd\       \markdown/histogram.png\               
+[17] \markdown/models.pdf\                   \markdown/models.Rmd\                  
+[19] \NOTES\                                 \pathfinder_example_project.Rproj\     
+[21] \python/python_model.py\                \r/data_clean_data_01.R\               
+[23] \test_text_file_01\                    </code></pre>
 <!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
@@ -329,11 +305,12 @@ root_dir_file_list</code></pre>
 <h2>Test to make sure there is an .Rproj file</h2>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2hlY2tfZm9yX3Jwcm9qKGZpbGVfbGlzdCA9IHJvb3RfZGlyX2ZpbGVfbGlzdClcbmBgYCJ9 -->
-<pre class="r"><code>check_for_rproj(file_list = root_dir_file_list)</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxuY2hlY2tfZm9yX3Jwcm9qKGZpbGVfbGlzdCA9IHJvb3RfZGlyX2ZpbGVfbGlzdClcbmBgYFxuYGBgIn0= -->
+<p><code>r</code>r check_for_rproj(file_list = root_dir_file_list)</p>
+<pre><code></code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFwiVGhlcmUgaXMgYSAuUnByb2ogZmlsZSBhdCB0aGUgcm9vdCBkaXJlY3RvcnkuXCJcbiJ9 -->
-<pre><code>[1] &quot;There is a .Rproj file at the root directory.&quot;</code></pre>
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFxcVGhlcmUgaXMgYSAuUnByb2ogZmlsZSBhdCB0aGUgcm9vdCBkaXJlY3RvcnkuXFxcbiJ9 -->
+<pre><code>[1] \There is a .Rproj file at the root directory.\</code></pre>
 <!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
@@ -344,9 +321,9 @@ root_dir_file_list</code></pre>
 <h1>Save root path and root directory file list for future</h1>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucmVhZHI6OndyaXRlX3Jkcyhyb290X2RpciwgXCJkYXRhL3Jvb3RfZGlyLnJkc1wiKVxucmVhZHI6OndyaXRlX3Jkcyhyb290X2Rpcl9maWxlX2xpc3QsIFwiZGF0YS9yb290X2Rpcl9maWxlX2xpc3RcIilcbmBgYCJ9 -->
-<pre class="r"><code>readr::write_rds(root_dir, &quot;data/root_dir.rds&quot;)
-readr::write_rds(root_dir_file_list, &quot;data/root_dir_file_list&quot;)</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxucmVhZHI6OndyaXRlX3Jkcyhyb290X2RpciwgXFxkYXRhL3Jvb3RfZGlyLnJkc1xcKVxucmVhZHI6OndyaXRlX3Jkcyhyb290X2Rpcl9maWxlX2xpc3QsIFxcZGF0YS9yb290X2Rpcl9maWxlX2xpc3RcXClcbmBgYFxuYGBgIn0= -->
+<p><code>r</code>r readr::write_rds(root_dir, /root_dir.rds) readr::write_rds(root_dir_file_list, /root_dir_file_list)</p>
+<pre><code></code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
@@ -392,7 +369,7 @@ loaded via a namespace (and not attached):
 <!-- rnb-chunk-end -->
 </div>
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAiSW52ZW50b3J5IHRoZSBjdXJyZW50IGZpbGUgZGlyZWN0b3J5IgpkYXRlOiAiQ3JlYXRlZDogMjAxOC0wMS0wMyA8YnI+IFVwZGF0ZWQ6IGByIFN5cy5EYXRlKClgIgpvdXRwdXQ6IAogIGh0bWxfbm90ZWJvb2s6CiAgICBjc3M6IGN1c3RvbS1jc3MuY3NzCi0tLQoKIyBUYWJsZSBvZiBjb250ZW50cwoKMS4gW092ZXJ2aWV3XSgjb3ZlcnZpZXcpICAgCjIuIFtVc2VyLWNyZWF0ZWQgZnVuY3Rpb25zXSgjZnVuY3Rpb25zKSAgIAozLiBbRmluZCByb290IGFuZCBjcmVhdGUgYSBsaXN0IG9mIGFsbCBmaWxlcyB1bmRlciB0aGUgcm9vdF0oI3Jvb3QpICAgCjQuIFtTYXZlIHJvb3QgcGF0aCBhbmQgcm9vdCBkaXJlY3RvcnkgZmlsZSBsaXN0IGZvciBmdXR1cmVdKCNzYXZlLXJvb3QpICAgCgoKIyBPdmVydmlldyB7I292ZXJ2aWV3fQoKSSBuZWVkZWQgdG8gY29tZSB1cCB3aXRoIGEgYmV0dGVyIG1ldGhvZCBmb3IgdHJhY2tpbmcgbm90ZXMvZG9jdW1lbnRhdGlvbi9maWxlIGRlcGVuZGVuY2llcyBpbiBhbmFseXNpcyBwcm9qZWN0cy4gVGhlIGdvYWwgb2YgUGF0aGZpbmRlciBpcyB0byBoZWxwIHRyYWNrIGZpbGUgZGVwZW5kZW5jaWVzIGluIHJlc2VhcmNoIHByb2plY3RzIGNyZWF0ZWQgaW4gUlN0dWRpby4gUGVyaGFwcyBvdGhlciB0aGluZ3MgbGF0ZXIuIAoKQXNzdW1wdGlvbnM6ICAgIAoxLiBQYXRoZmluZGVyIHdpbGwgdHlwaWNhbGx5IGJlIGRlcGxveWVkIGluIFIgcHJvamVjdHMuICAgCgogICogV2hlbiBkZXBsb3llZCBpbiBSIHByb2plY3RzLCBQYXRoZmluZGVyIHdpbGwgYXV0b21hdGljYWxseSBkZXRlY3QgdGhlIC5ScHJvaiBmaWxlIGFuZCB0aGUgcGF0aCB0byB0aGF0IC5ScHJvaiBmaWxlIHdpbGwgYmUgc2UgYXMgdGhlIHJvb3QgZGlyZWN0b3J5LiAgIAoKICAqIElmIHRoZSB1c2VyIGRlc2lyZXMgYSBkaWZmZXJlbnQgYmVoYXZpb3IgKGUuZy4sIHRhcmdldCBhIGRpZmZlcmVudCBwcm9qZWN0IHRoYW4gdGhlIG9uZSB0aGUgdXNlciBpcyBjdXJyZW50bHkgd29ya2luZyBpbiBvciBtYXBwaW5nIGRlcGVuZGVuY2llcyBhbW9uZyBhIGNvbGxlY3Rpb24gb2YgZmlsZXMgdGhhdCBkbyBub3QgZXhpc3QgaW4gYW4gUiBwcm9qZWN0KSB0aGVuIHRoZSBwYXRoIGNhbiBiZSBzcGVjaWZpZWQgbWFudWFsbHkuICAgIAoKICAgIC0gVGhlIHNwZWNpZmllZCBwYXRoIHdpbGwgc2VydmUgYXMgdGhlIHJvb3QgZGlyZWN0b3J5LiBQYXRoZmluZGVyIHdpbGwgYXR0ZW1wdCB0byBnYXRoZXIgZGVwZW5kZW5jeSBpbmZvcm1hdGlvbiBhYm91dCBldmVyeSBmaWxlIGluIHRoZSByb290IGRpcmVjdG9yeSBhbmQgYWxsIGNoaWxkIGRpcmVjdG9yaWVzLiAgIAogICAgICAgIAogICAgLSBJZiB0aGUgdXNlciBpcyBub3QgaW4gYW4gUiBwcm9qZWN0IGFuZCBhIHBhdGggaXMgbm90IHNwZWNpZmllZCwgdGhlbiBQYXRoZmluZGVyIHdpbGwgc2V0IHRoZSBjdXJyZW50IGRpcmVjdG9yeSB0byBiZSB0aGUgcHJvamVjdCByb290LiBQYXRoZmluZGVyIHdpbGwgYXR0ZW1wdCB0byBnYXRoZXIgZGVwZW5kZW5jeSBpbmZvcm1hdGlvbiBhYm91dCBldmVyeSBmaWxlIGluIHRoZSByb290IGRpcmVjdG9yeSBhbmQgYWxsIGNoaWxkIGRpcmVjdG9yaWVzLgogICAgICAgIAoyLiBUaGVyZWZvcmUsIHRvIHVzZSBQYXRoZmluZGVyIHRoZSB1c2VyIG11c3QgYmUgaW4gYW4gb3BlbiBSIHByb2plY3QsIHByb3ZpZGUgYSBmaWxlIHBhdGgsIG9yIGJvdGguCgoKIyBMb2FkIHBhY2thZ2VzCgpgYGB7ciBzZXR1cCwgaW5jbHVkZT1GQUxTRX0Ka25pdHI6Om9wdHNfY2h1bmskc2V0KGNvbW1lbnQgPSBOQSkKU3lzLnNldGVudihUWiA9ICJVUy9DZW50cmFsIikKYGBgCgpgYGB7ciBtZXNzYWdlPUZBTFNFfQpsaWJyYXJ5KHRpZHl2ZXJzZSkKYGBgCgoKCgoKCgoKCgojIFVzZXItY3JlYXRlZCBmdW5jdGlvbnMgeyNmdW5jdGlvbnN9CgpUaGVzZSBhcmUgdGhlIGZ1bmN0aW9ucyB3ZSB1c2UgYmVsb3cuIEknbSBtYWtpbmcgdGhlbSBlYXN5IHRvIGZpbmQgaGVyZSBhdCB0aGUgdG9wIG9mIHRoZSBub3RlYm9vayBiZWNhdXNlIHlvdSBtYXkgd2FudCB0byBtb3ZlIHRoZW0gb3ZlciB0byB0aGUgUGF0aGZpbmRlciBwYWNrYWdlIHdoZW4geW91IGFyZSBkb25lIHdpdGggdGVzdGluZy4KCmBgYHtyfQojIEZpbmQgcm9vdCBhbmQgZ2V0IGEgbGlzdCBvZiBhbGwgZmlsZXMgdW5kZXIgdGhlIHJvb3QKIyBTYXZlIHRoZSBwYXRoIHRvIHRoZSBjdXJyZW50IHByb2plY3Qgcm9vdCBkaXJlY3RvcnkKIyBNYWtlIGhlcmU6OmhlcmUoKSB0aGUgZGVmYXVsdCBsb2NhdGlvbiBmb3IgZmluZGluZyB0aGUgcHJvamVjdCByb290LCBidXQgCiMgYWxsb3cgdGhlIHVzZXIgdG8gb3ZlcnJpZGUgaXQKZ2V0X3Byb2plY3Rfcm9vdCA8LSBmdW5jdGlvbihwYXRoID0gTlVMTCkgewogIGlmIChpcy5udWxsKHBhdGgpKSB7CiAgICByb290X2RpciA8LSBoZXJlOjpoZXJlKCkKICB9IGVsc2UgewogICAgcm9vdF9kaXIgPC0gcGF0aAogIH0KICByb290X2Rpcgp9CmBgYAoKYGBge3J9CiMgVGVzdCB0byBzZWUgaWYgdGhlcmUgaXMgYW4gLlJwcm9qIGZpbGUgYXQgdGhlIHJvb3QKIyBUaGUgcmVndWxhciBleHByZXNzaW9uIGxvb2tzIGZvciBhbnkgZmlsZSBuYW1lIHRoYXQgZW5kcyB3aXRoICIuUnByb2oiCmNoZWNrX2Zvcl9ycHJvaiA8LSBmdW5jdGlvbihmaWxlX2xpc3QgPSByb290X2Rpcl9maWxlX2xpc3QpIHsKICBpZiAoICEoIGFueSggc3RyaW5ncjo6c3RyX2RldGVjdChmaWxlX2xpc3QsICJcXC5ScHJvaiIgKSkpKSB7CiAgICBwcmludCgiRXhwZWN0aW5nIGEgLlJwcm9qIGZpbGUgYXQgdGhlIHJvb3QgZGlyZWN0b3J5OiAiLCByb290X2RpcikKICB9IGVsc2UgewogICAgcHJpbnQoIlRoZXJlIGlzIGEgLlJwcm9qIGZpbGUgYXQgdGhlIHJvb3QgZGlyZWN0b3J5LiIpCiAgfQp9CmBgYAoKW3RvcF0oI3RvcCkKCgoKCgoKCgoKCgojIEZpbmQgcm9vdCBhbmQgY3JlYXRlIGEgbGlzdCBvZiBhbGwgZmlsZXMgdW5kZXIgdGhlIHJvb3QgeyNyb290fQoKIyMgU2F2ZSB0aGUgcGF0aCB0byB0aGUgY3VycmVudCBwcm9qZWN0IHJvb3QgZGlyZWN0b3J5CgpNYWtlIGhlcmU6OmhlcmUoKSB0aGUgZGVmYXVsdCBsb2NhdGlvbiBmb3IgZmluZGluZyB0aGUgcHJvamVjdCByb290LCBidXQgYWxsb3cgdGhlIHVzZXIgdG8gb3ZlcnJpZGUgaXQuIFRoYXQgc2hvdWxkIGFsc28gYWxsb3cgbWUgdG8gc2VwYXJhdGUgdGhlIHBhY2thZ2UgaXRzZWxmIGZyb20gdGhlIHBhY2thZ2UgZGV2ZWxvcG1lbnQvdGVzdGluZyBmaWxlcy4gCgojIyMgVGVzdGluZyBkZWZhdWx0IGJlaGF2aW9yIC0gaW5zaWRlIGFuIFIgcHJvamVjdAoKYGBge3J9CmdldF9wcm9qZWN0X3Jvb3QoKQpgYGAKCiMjIyBUZXN0aW5nIHVzZXItcHJvdmlkZWQgcGF0aAoKYGBge3J9CmdldF9wcm9qZWN0X3Jvb3QoIi9Vc2Vycy9icmFkY2FubmVsbC9Ecm9wYm94L1IvUGFja2FnZXMvcGF0aGZpbmRlcl9leGFtcGxlX3Byb2plY3QiKQpgYGAKCmBgYHtyfQpyb290X2RpciA8LSBnZXRfcHJvamVjdF9yb290KCIvVXNlcnMvYnJhZGNhbm5lbGwvRHJvcGJveC9SL1BhY2thZ2VzL3BhdGhmaW5kZXJfZXhhbXBsZV9wcm9qZWN0IikKcm9vdF9kaXIKYGBgCgoKIyMgQ3JlYXRlIGEgdmVjdG9yIGNvbnRhaW5pbmcgdGhlIG5hbWVzIG9mIGFsbCB0aGUgZmlsZXMgaW4gdGhlIHJvb3QgZGlyZWN0b3J5CgpgYGB7cn0Kcm9vdF9kaXJfZmlsZV9saXN0IDwtIGxpc3QuZmlsZXMocGF0aCA9IHJvb3RfZGlyLCByZWN1cnNpdmUgPSBUUlVFKQpyb290X2Rpcl9maWxlX2xpc3QKYGBgCgoKIyMgVGVzdCB0byBtYWtlIHN1cmUgdGhlcmUgaXMgYW4gLlJwcm9qIGZpbGUKCmBgYHtyfQpjaGVja19mb3JfcnByb2ooZmlsZV9saXN0ID0gcm9vdF9kaXJfZmlsZV9saXN0KQpgYGAKClt0b3BdKCN0b3ApCgoKCgoKCgoKCgojIFNhdmUgcm9vdCBwYXRoIGFuZCByb290IGRpcmVjdG9yeSBmaWxlIGxpc3QgZm9yIGZ1dHVyZSB7I3NhdmUtcm9vdH0KCmBgYHtyfQpyZWFkcjo6d3JpdGVfcmRzKHJvb3RfZGlyLCAiZGF0YS9yb290X2Rpci5yZHMiKQpyZWFkcjo6d3JpdGVfcmRzKHJvb3RfZGlyX2ZpbGVfbGlzdCwgImRhdGEvcm9vdF9kaXJfZmlsZV9saXN0IikKYGBgCgpbdG9wXSgjdG9wKQoKJm5ic3A7CgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCgpgYGB7ciBlY2hvPUZBTFNFfQpzZXNzaW9uSW5mbygpCmBgYAo=</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiSW52ZW50b3J5IHRoZSBjdXJyZW50IGZpbGUgZGlyZWN0b3J5IgpkYXRlOiAiQ3JlYXRlZDogMjAxOC0wMS0wMyA8YnI+IFVwZGF0ZWQ6IGByIFN5cy5EYXRlKClgIgpvdXRwdXQ6IAogIGh0bWxfbm90ZWJvb2s6CiAgICBjc3M6IGN1c3RvbS1jc3MuY3NzCi0tLQoKIyBUYWJsZSBvZiBjb250ZW50cwoKMS4gW092ZXJ2aWV3XSgjb3ZlcnZpZXcpICAgCjIuIFtVc2VyLWNyZWF0ZWQgZnVuY3Rpb25zXSgjZnVuY3Rpb25zKSAgIAozLiBbRmluZCByb290IGFuZCBjcmVhdGUgYSBsaXN0IG9mIGFsbCBmaWxlcyB1bmRlciB0aGUgcm9vdF0oI3Jvb3QpICAgCjQuIFtTYXZlIHJvb3QgcGF0aCBhbmQgcm9vdCBkaXJlY3RvcnkgZmlsZSBsaXN0IGZvciBmdXR1cmVdKCNzYXZlLXJvb3QpICAgCgoKIyBPdmVydmlldyB7I292ZXJ2aWV3fQoKSSBuZWVkZWQgdG8gY29tZSB1cCB3aXRoIGEgYmV0dGVyIG1ldGhvZCBmb3IgdHJhY2tpbmcgbm90ZXMvZG9jdW1lbnRhdGlvbi9maWxlIGRlcGVuZGVuY2llcyBpbiBhbmFseXNpcyBwcm9qZWN0cy4gVGhlIGdvYWwgb2YgUGF0aGZpbmRlciBpcyB0byBoZWxwIHRyYWNrIGZpbGUgZGVwZW5kZW5jaWVzIGluIHJlc2VhcmNoIHByb2plY3RzIGNyZWF0ZWQgaW4gUlN0dWRpby4gUGVyaGFwcyBvdGhlciB0aGluZ3MgbGF0ZXIuIAoKQXNzdW1wdGlvbnM6ICAgIAoxLiBQYXRoZmluZGVyIHdpbGwgdHlwaWNhbGx5IGJlIGRlcGxveWVkIGluIFIgcHJvamVjdHMuICAgCgogICogV2hlbiBkZXBsb3llZCBpbiBSIHByb2plY3RzLCBQYXRoZmluZGVyIHdpbGwgYXV0b21hdGljYWxseSBkZXRlY3QgdGhlIC5ScHJvaiBmaWxlIGFuZCB0aGUgcGF0aCB0byB0aGF0IC5ScHJvaiBmaWxlIHdpbGwgYmUgc2UgYXMgdGhlIHJvb3QgZGlyZWN0b3J5LiAgIAoKICAqIElmIHRoZSB1c2VyIGRlc2lyZXMgYSBkaWZmZXJlbnQgYmVoYXZpb3IgKGUuZy4sIHRhcmdldCBhIGRpZmZlcmVudCBwcm9qZWN0IHRoYW4gdGhlIG9uZSB0aGUgdXNlciBpcyBjdXJyZW50bHkgd29ya2luZyBpbiBvciBtYXBwaW5nIGRlcGVuZGVuY2llcyBhbW9uZyBhIGNvbGxlY3Rpb24gb2YgZmlsZXMgdGhhdCBkbyBub3QgZXhpc3QgaW4gYW4gUiBwcm9qZWN0KSB0aGVuIHRoZSBwYXRoIGNhbiBiZSBzcGVjaWZpZWQgbWFudWFsbHkuICAgIAoKICAgIC0gVGhlIHNwZWNpZmllZCBwYXRoIHdpbGwgc2VydmUgYXMgdGhlIHJvb3QgZGlyZWN0b3J5LiBQYXRoZmluZGVyIHdpbGwgYXR0ZW1wdCB0byBnYXRoZXIgZGVwZW5kZW5jeSBpbmZvcm1hdGlvbiBhYm91dCBldmVyeSBmaWxlIGluIHRoZSByb290IGRpcmVjdG9yeSBhbmQgYWxsIGNoaWxkIGRpcmVjdG9yaWVzLiAgIAogICAgICAgIAogICAgLSBJZiB0aGUgdXNlciBpcyBub3QgaW4gYW4gUiBwcm9qZWN0IGFuZCBhIHBhdGggaXMgbm90IHNwZWNpZmllZCwgdGhlbiBQYXRoZmluZGVyIHdpbGwgc2V0IHRoZSBjdXJyZW50IGRpcmVjdG9yeSB0byBiZSB0aGUgcHJvamVjdCByb290LiBQYXRoZmluZGVyIHdpbGwgYXR0ZW1wdCB0byBnYXRoZXIgZGVwZW5kZW5jeSBpbmZvcm1hdGlvbiBhYm91dCBldmVyeSBmaWxlIGluIHRoZSByb290IGRpcmVjdG9yeSBhbmQgYWxsIGNoaWxkIGRpcmVjdG9yaWVzLgogICAgICAgIAoyLiBUaGVyZWZvcmUsIHRvIHVzZSBQYXRoZmluZGVyIHRoZSB1c2VyIG11c3QgYmUgaW4gYW4gb3BlbiBSIHByb2plY3QsIHByb3ZpZGUgYSBmaWxlIHBhdGgsIG9yIGJvdGguCgoKIyBMb2FkIHBhY2thZ2VzCgpgYGB7ciBzZXR1cCwgaW5jbHVkZT1GQUxTRX0Ka25pdHI6Om9wdHNfY2h1bmskc2V0KGNvbW1lbnQgPSBOQSkKU3lzLnNldGVudihUWiA9ICJVUy9DZW50cmFsIikKYGBgCgpgYGB7ciBtZXNzYWdlPUZBTFNFfQpsaWJyYXJ5KHRpZHl2ZXJzZSkKYGBgCgoKCgoKCgoKCgojIFVzZXItY3JlYXRlZCBmdW5jdGlvbnMgeyNmdW5jdGlvbnN9CgpUaGVzZSBhcmUgdGhlIGZ1bmN0aW9ucyB3ZSB1c2UgYmVsb3cuIEknbSBtYWtpbmcgdGhlbSBlYXN5IHRvIGZpbmQgaGVyZSBhdCB0aGUgdG9wIG9mIHRoZSBub3RlYm9vayBiZWNhdXNlIHlvdSBtYXkgd2FudCB0byBtb3ZlIHRoZW0gb3ZlciB0byB0aGUgUGF0aGZpbmRlciBwYWNrYWdlIHdoZW4geW91IGFyZSBkb25lIHdpdGggdGVzdGluZy4KCmBgYHtyfQojIFRlc3QgdG8gc2VlIGlmIHRoZXJlIGlzIGFuIC5ScHJvaiBmaWxlIGF0IHRoZSByb290CiMgVGhlIHJlZ3VsYXIgZXhwcmVzc2lvbiBsb29rcyBmb3IgYW55IGZpbGUgbmFtZSB0aGF0IGVuZHMgd2l0aCAiLlJwcm9qIgpjaGVja19mb3JfcnByb2ogPC0gZnVuY3Rpb24oZmlsZV9saXN0ID0gcm9vdF9kaXJfZmlsZV9saXN0KSB7CiAgaWYgKCAhKCBhbnkoIHN0cmluZ3I6OnN0cl9kZXRlY3QoZmlsZV9saXN0LCAiXFwuUnByb2oiICkpKSkgewogICAgcHJpbnQoIkV4cGVjdGluZyBhIC5ScHJvaiBmaWxlIGF0IHRoZSByb290IGRpcmVjdG9yeTogIiwgcm9vdF9kaXIpCiAgfSBlbHNlIHsKICAgIHByaW50KCJUaGVyZSBpcyBhIC5ScHJvaiBmaWxlIGF0IHRoZSByb290IGRpcmVjdG9yeS4iKQogIH0KfQpgYGAKClt0b3BdKCN0b3ApCgoKCgoKCgoKCgoKIyBGaW5kIHJvb3QgYW5kIGNyZWF0ZSBhIGxpc3Qgb2YgYWxsIGZpbGVzIHVuZGVyIHRoZSByb290IHsjcm9vdH0KCiMjIFNhdmUgdGhlIHBhdGggdG8gdGhlIGN1cnJlbnQgcHJvamVjdCByb290IGRpcmVjdG9yeQoKTWFrZSBoZXJlOjpoZXJlKCkgdGhlIGRlZmF1bHQgbG9jYXRpb24gZm9yIGZpbmRpbmcgdGhlIHByb2plY3Qgcm9vdCwgYnV0IGFsbG93IHRoZSB1c2VyIHRvIG92ZXJyaWRlIGl0LiBUaGF0IHNob3VsZCBhbHNvIGFsbG93IG1lIHRvIHNlcGFyYXRlIHRoZSBwYWNrYWdlIGl0c2VsZiBmcm9tIHRoZSBwYWNrYWdlIGRldmVsb3BtZW50L3Rlc3RpbmcgZmlsZXMuIAoKIyMjIFRlc3RpbmcgZGVmYXVsdCBiZWhhdmlvciAtIGluc2lkZSBhbiBSIHByb2plY3QKCmBgYHtyfQpnZXRfcHJvamVjdF9yb290KCkKYGBgCgojIyMgVGVzdGluZyB1c2VyLXByb3ZpZGVkIHBhdGgKCmBgYHtyfQpnZXRfcHJvamVjdF9yb290KCIvVXNlcnMvYnJhZGNhbm5lbGwvRHJvcGJveC9SL1BhY2thZ2VzL3BhdGhmaW5kZXJfZXhhbXBsZV9wcm9qZWN0IikKYGBgCgpgYGB7cn0Kcm9vdF9kaXIgPC0gZ2V0X3Byb2plY3Rfcm9vdCgiL1VzZXJzL2JyYWRjYW5uZWxsL0Ryb3Bib3gvUi9QYWNrYWdlcy9wYXRoZmluZGVyX2V4YW1wbGVfcHJvamVjdCIpCnJvb3RfZGlyCmBgYAoKCiMjIENyZWF0ZSBhIHZlY3RvciBjb250YWluaW5nIHRoZSBuYW1lcyBvZiBhbGwgdGhlIGZpbGVzIGluIHRoZSByb290IGRpcmVjdG9yeQoKYGBge3J9CnJvb3RfZGlyX2ZpbGVfbGlzdCA8LSBsaXN0LmZpbGVzKHBhdGggPSByb290X2RpciwgcmVjdXJzaXZlID0gVFJVRSkKcm9vdF9kaXJfZmlsZV9saXN0CmBgYAoKCiMjIFRlc3QgdG8gbWFrZSBzdXJlIHRoZXJlIGlzIGFuIC5ScHJvaiBmaWxlCgpgYGB7cn0KY2hlY2tfZm9yX3Jwcm9qKGZpbGVfbGlzdCA9IHJvb3RfZGlyX2ZpbGVfbGlzdCkKYGBgCgpbdG9wXSgjdG9wKQoKCgoKCgoKCgoKIyBTYXZlIHJvb3QgcGF0aCBhbmQgcm9vdCBkaXJlY3RvcnkgZmlsZSBsaXN0IGZvciBmdXR1cmUgeyNzYXZlLXJvb3R9CgpgYGB7cn0KcmVhZHI6OndyaXRlX3Jkcyhyb290X2RpciwgImRhdGEvcm9vdF9kaXIucmRzIikKcmVhZHI6OndyaXRlX3Jkcyhyb290X2Rpcl9maWxlX2xpc3QsICJkYXRhL3Jvb3RfZGlyX2ZpbGVfbGlzdCIpCmBgYAoKW3RvcF0oI3RvcCkKCiZuYnNwOwoKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQoKYGBge3IgZWNobz1GQUxTRX0Kc2Vzc2lvbkluZm8oKQpgYGAK</div>
 
 
 

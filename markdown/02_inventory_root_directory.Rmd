@@ -57,21 +57,6 @@ library(tidyverse)
 These are the functions we use below. I'm making them easy to find here at the top of the notebook because you may want to move them over to the Pathfinder package when you are done with testing.
 
 ```{r}
-# Find root and get a list of all files under the root
-# Save the path to the current project root directory
-# Make here::here() the default location for finding the project root, but 
-# allow the user to override it
-get_project_root <- function(path = NULL) {
-  if (is.null(path)) {
-    root_dir <- here::here()
-  } else {
-    root_dir <- path
-  }
-  root_dir
-}
-```
-
-```{r}
 # Test to see if there is an .Rproj file at the root
 # The regular expression looks for any file name that ends with ".Rproj"
 check_for_rproj <- function(file_list = root_dir_file_list) {
