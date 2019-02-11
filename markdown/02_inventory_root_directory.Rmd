@@ -15,7 +15,7 @@ I needed to come up with a better method for tracking notes/documentation/file d
 Assumptions:    
 1. Pathfinder will typically be deployed in R projects.   
 
-  * When deployed in R projects, Pathfinder will automatically detect the .Rproj file and the path to that .Rproj file will be se as the root directory.   
+  * When deployed in R projects, Pathfinder will automatically detect the .Rproj file and the path to that .Rproj file will be set as the root directory.   
 
   * If the user desires a different behavior (e.g., target a different project than the one the user is currently working in or mapping dependencies among a collection of files that do not exist in an R project) then the path can be specified manually.    
 
@@ -35,6 +35,8 @@ Sys.setenv(TZ = "US/Central")
 
 ```{r message=FALSE}
 library(tidyverse)
+source("../r/get_project_root.R")
+source("../r/check_for_rproj.R")
 ```
 
 
@@ -98,8 +100,8 @@ check_for_rproj(file_list = root_dir_file_list)
 # Save root path and root directory file list for future {#save-root}
 
 ```{r}
-readr::write_rds(root_dir, "data/root_dir.rds")
-readr::write_rds(root_dir_file_list, "data/root_dir_file_list")
+readr::write_rds(root_dir, "../data/root_dir.rds")
+readr::write_rds(root_dir_file_list, "../data/root_dir_file_list")
 ```
 
 [top](#top)
