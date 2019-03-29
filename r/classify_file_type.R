@@ -23,5 +23,6 @@ classify_file_type <- function(char_vect) {
   char_vect[char_vect %in% code_extentions]   <- "code"
   char_vect[char_vect %in% data_extentions]   <- "data"
   char_vect[char_vect %in% output_extentions] <- "output"
+  char_vect[is.na(char_vect)] <- "other"
   char_vect
 }
